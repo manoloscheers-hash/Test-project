@@ -6,7 +6,7 @@ from stravalib import Client
 
 # 1. Pagina instellingen
 st.set_page_config(
-    page_title="Running ACWR & Nutrition Monitor",
+    page_title="Running & Nutrition Monitor",
     page_icon="🏃‍♂️",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -29,7 +29,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏃‍♂️ Running ACWR & Herstel Monitor")
+st.title("🏃‍♂️ Running & Herstel Monitor")
 st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je Strava-activiteiten.")
 
 # Vaste Client ID en Secret
@@ -93,10 +93,10 @@ else:
     st.sidebar.markdown("---")
     tijd_optie = st.sidebar.selectbox(
         "📅 Tijdweergave analyse:",
-        ["Laatste 4 Wekelijkse (Standaard ACWR)", "Afgelopen 3 Maanden", "Afgelopen 6 Maanden", "Afgelopen Jaar"]
+        ["Laatste 4 Wekelijkse", "Afgelopen 3 Maanden", "Afgelopen 6 Maanden", "Afgelopen Jaar"]
     )
 
-    if tijd_optie == "Laatste 4 Wekelijkse (Standaard ACWR)":
+    if tijd_optie == "Laatste 4 Wekelijkse":
         aantal_weken = 5
     elif tijd_optie == "Afgelopen 3 Maanden":
         aantal_weken = 13
