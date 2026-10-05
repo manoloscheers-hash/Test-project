@@ -79,7 +79,7 @@ else:
 
     # Als we nog geen access token hebben, toon de inloglink
     if not st.session_state.access_token:
-        redirect_uri = "http://localhost:8501"  # Pas dit aan naar je publieke URL als je hem online host (bijv. Streamlit Cloud)
+        redirect_uri = "https://test-project-esbc6cm8557nybkrc4o8kv.streamlit.app/"  # Pas dit aan naar je publieke URL als je hem online host (bijv. Streamlit Cloud)
         authorize_url = client.authorization_url(
             client_id=DEFAULT_CLIENT_ID,
             redirect_uri=redirect_uri,
