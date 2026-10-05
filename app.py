@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown("""
     <style>
     [data-testid="stMetricValue"] {
-        font-size: 16px;
+        font-size: 24px;
     }
     .main {
         padding-top: 0rem;
