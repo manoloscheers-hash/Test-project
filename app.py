@@ -93,10 +93,10 @@ else:
     st.sidebar.markdown("---")
     tijd_optie = st.sidebar.selectbox(
         "📅 Tijdweergave analyse:",
-        ["Laatste 4 Wekelijkse (Standaard ACWR)", "Afgelopen 3 Maanden", "Afgelopen 6 Maanden", "Afgelopen Jaar"]
+        ["Laatste 4 Wekelijkse", "Afgelopen 3 Maanden", "Afgelopen 6 Maanden", "Afgelopen Jaar"]
     )
 
-    if tijd_optie == "Laatste 4 Wekelijkse (Standaard ACWR)":
+    if tijd_optie == "Laatste 4 Wekelijkse":
         aantal_weken = 5
     elif tijd_optie == "Afgelopen 3 Maanden":
         aantal_weken = 13
@@ -198,12 +198,12 @@ else:
         # --- DASHBOARD WEERGAVE (MOBIEL VRIENDELIJK) ---
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        st.subheader("📊 ACWR Overzicht")
+        st.subheader("📊 Overzicht")
 
         # Op mobiel stacken kolommen automatisch mooi onder elkaar of naast elkaar
         col1, col2, col3 = st.columns(3)
-        col1.metric("Acute (7d)", f"{round(acute_load, 1)}")
-        col2.metric("Chronic (4w)", f"{round(chronic_load, 1)}")
+        col1.metric("Afgelopen week (7d)", f"{round(acute_load, 1)}")
+        col2.metric("Afgelopen maand (4w)", f"{round(chronic_load, 1)}")
         col3.metric("Ratio", f"{round(acwr, 2)}")
 
         # Advies box
