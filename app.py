@@ -24,7 +24,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏃‍♂️ Running ACWR Monitor")
+st.title("🏃‍♂️ Hardloop monitor")
 st.markdown("Monitor je trainingsbelasting en blessurerisico op basis van je Strava-activiteiten.")
 
 # Vaste Client ID en Secret
