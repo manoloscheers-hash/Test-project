@@ -260,7 +260,8 @@ else:
 
         with tab_nutrition:
             st.subheader("🍎 Voeding & Hersteladvies per Training")
-            st.markdown("Selecteer hieronder een recente training om het calorieverbruik te zien en gerichte maaltijdvoorbeelden te krijgen voor je herstel.")
+            st.markdown(
+                "Selecteer hieronder een recente training om het calorieverbruik, de hersteltijd en gerichte maaltijdvoorbeelden te bekijken.")
 
             if detailed_activities_list:
                 activity_labels = [act["label"] for act in detailed_activities_list[:15]]
@@ -275,30 +276,91 @@ else:
                 col_n3.metric("Verbrande Kcal", f"{selected_act['calories']} kcal")
 
                 cals = selected_act['calories']
+                duration = selected_act['time_mins']
+                name_lower = selected_act['name'].lower()
 
+                # --- 1. AUTOMATISCHE HERSTELTIJD INDICATOR ---
+                # Bepaal intensiteit op basis van naam of calorieverbruik per minuut
+                cals_per_min = cals / duration if duration > 0 else 10
+
+                if any(kef in name_lower for k in
+                       ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or cals_per_min > 13:
+                    training_type = "Intensief (Interval / Tempo)"
+                    recovery_hours = 48
+                    recovery_status = "🔴 Zware belasting — Volledig glycogeenherstel en spierherstel vereist."
+                elif selected_act['distance'] > 15 or duration > 75:
+                    training_type = "Lange Duurloop (LSD)"
+                    recovery_hours = 36
+                    recovery_status = "🟠 Grote duurbelasting — Focus op vocht, zouten en langzame koolhydraten."
+                else:
+                    training_type = "Herstel / Rustige Duurloop"
+                    recovery_hours = 24
+                    recovery_status = "🟢 Lichte belasting — Snelle en eenvoudige hersteltijd."
+
+                st.markdown("### ⏱️ Geschatte Hersteltijd")
+                st.info(
+                    f"**Type sessie:** {training_type}\n\n**Advies:** {recovery_status} \n*Geschatte tijd tot volledig herstel: **ca. {recovery_hours} uur**.*")
+
+                # --- 2. DOELGERICHTE MACRO'S ---
                 carbs_target = int(cals * 0.6 / 4)
                 protein_target = int(st.session_state.body_weight * 0.3)
 
                 st.markdown("### 🎯 Hersteldoel voor deze sessie")
-                st.markdown(f"- **Koolhydraten aanvullen:** ca. **{carbs_target} gram** (om je glycogeenvoorraad op peil te brengen)")
-                st.markdown(f"- **Eiwitten voor spierherstel:** ca. **25 - 30 gram**")
+                st.markdown(f"- **Koolhydraten aanvullen:** ca. **{carbs_target} gram**")
+                st.markdown(f"- **Eiwitten voor spierherstel:** ca. **{protein_target} gram**")
 
                 st.markdown("---")
-                st.markdown("### 🍳 3 Voorbeeldmaaltijden voor Optimaal Herstel")
+                st.markdown("### 🍳 Intensiteits-specifieke Voorbeeldmaaltijden")
 
-                st.markdown(f"""
-                **1. De Snelle Shake / Smoothie (Binnen 30 min na afloop)**
-                * *Wat zit erin:* 1 grote banaan, 300 ml magere melk of havermelk, 1 schep eiwitpoeder (of 200g magere kwark), en een handje rood fruit.
-                * *Waarom:* Snel op te nemen koolhydraten en hoogwaardige eiwitten om direct de spierafbraak te stoppen en herstel te starten.
+                # --- 3. DYNAMISCHE MAALTIJDEN OP BASIS VAN TYPE ---
+                if training_type == "Intensief (Interval / Tempo)":
+                    st.markdown(f"""
+                    *Na intensieve prikkels hebben je spieren direct snelle koolhydraten en eiwitten nodig om glycogeen snel aan te vullen.*
 
-                **2. De Power Havermoutkom (Ideaal na een ochtendloop)**
-                * *Wat zit erin:* 70g havermout gekookt in melk, 1 eetlepel pindakaas, een appel in stukjes, kaneel en een handje ongezouten noten.
-                * *Waarom:* Rijke bron van langzame en snelle koolhydraten met gezonde vetten en eiwitten.
+                    **1. De Snelle Post-Workout Smoothie (Binnen 30 min)**
+                    * *Wat:* 1 grote banaan, 300ml magere melk/havermelk, 1 schep eiwitpoeder en een hand bosbessen.
+                    * *Waarom:* Directe opname van snelle suikers en hoogwaardige eiwitten.
 
-                **3. De Herstel-Avondmaaltijd (Rijst met Kip/Tofu & Groenten)**
-                * *Wat zit erin:* 100g (ongekookte) rijst of volkoren pasta, 125g kipfilet of vegetarische reepjes, een ruime portie gewokte groenten (paprika, broccoliroosjes) en een lichte soyasaus/oosterse saus.
-                * *Waarom:* Vult je glycogeenvoorraad volledig aan voor je volgende training en levert de bouwstenen voor sterkere spieren.
-                """)
+                    **2. Rijst met Kip en Zoete Aardappel**
+                    * *Wat:* 100g witte rijst, 125g kipfilet, gekookte broccoliroosjes en een klein beetje olijfolie.
+                    * *Waarom:* Witte rijst levert extreem snel op te nemen koolhydraten voor een lege glycogeenvoorraad.
+
+                    **3. Volkoren Pannenkoeken met Honing**
+                    * *Wat:* 3 volkoren pannenkoeken gebakken met een ei en melk, afgetopt met een flinke lepel honing en banaan.
+                    * *Waarom:* Combinatie van complexe en snelle koolhydraten met herstellende eiwitten.
+                    """)
+                elif training_type == "Lange Duurloop (LSD)":
+                    st.markdown(f"""
+                    *Tijdens lange duurlopen spreek je je vetmetabolisme aan en raken je glycogeenreserves diep leeg. Focus ligt op vocht, zouten en geleidelijke energie.*
+
+                    **1. De Power Havermoutkom**
+                    * *Wat:* 70g havermout in melk, 1 el pindakaas, een gesneden appel, kaneel en een handje ongezouten noten.
+                    * *Waarom:* Langzame koolhydraten voor een geleidelijke afgifte en gezonde vetten voor je hormoonhuishouding.
+
+                    **2. Volkoren Pasta Bolognese (Rijk aan groenten)**
+                    * *Wat:* 100g volkoren pasta, tomatensaus met veel groenten (paprika, courgette) en mager rundergehakt of linzen.
+                    * *Waarom:* Langzame koolhydraten die langdurig energie afgeven en ijzer/eiwitten ter ondersteuning.
+
+                    **3. Geroosterde Volkoren Boterhammen met Avocado & Eieren**
+                    * *Wat:* 3 sneetjes volkoren brood, 1 geprakte avocado, 2 gekookte eieren en een snuf zeezout (voor zoutaanvulling).
+                    * *Waarom:* Goede mix van vezels, eiwitten en broodnodige natrium/zouten na veel zweten.
+                    """)
+                else:
+                    st.markdown(f"""
+                    *Bij een lichte of herstelloop is de schade minimaal; je hoeft minder agressief aan te vullen, maar eiwitten blijven belangrijk.*
+
+                    **1. Magere Kwark met Fruit en Noten**
+                    * *Wat:* 250g magere kwark met een handje muesli, rood fruit en een handje walnoten.
+                    * *Waarom:* Hoog in caseïne-eiwitten voor langdurig spierherstel zonder overbodige suikers.
+
+                    **2. Omelet met Volkoren Brood**
+                    * *Wat:* 2 eieren gebakken met spinazie en tomaat, geserveerd op 2 sneetjes volkoren brood.
+                    * *Waarom:* Lichte, eiwitrijke maaltijd die je spieren voedt zonder dat het zwaar op de maag ligt.
+
+                    **3. Salade met Quinoa en Tonijn**
+                    * *Wat:* Kom quinoa, komkommer, tomaat, een blikje tonijn en een dressing van olijfolie en citroen.
+                    * *Waarom:* Lichte koolhydraten en gezonde vetten/eiwitten voor een vlot herstel.
+                    """)
             else:
                 st.warning("Geen recente hardloopactiviteiten gevonden.")
     except Exception as e:
