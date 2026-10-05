@@ -67,7 +67,7 @@ if "code" in query_params and not st.session_state.access_token:
 if not st.session_state.access_token:
     st.info("👋 Welkom! Log in met je Strava-account om je eigen hardloopdata te analyseren.")
 
-    redirect_uri = "https://test-project-esbc6cm8557nybkrc4o8kv.streamlit.app"
+    redirect_uri = "https://test-project-esbc6cm8557nybkrc4o8kv.streamlit.app/"
     authorize_url = client.authorization_url(
         client_id=DEFAULT_CLIENT_ID,
         redirect_uri=redirect_uri,
