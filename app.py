@@ -6,7 +6,7 @@ from stravalib import Client
 
 # 1. Pagina instellingen (Geoptimaliseerd voor mobiel: gebruik 'wide' of compacte elementen)
 st.set_page_config(
-    page_title="Running ACWR Monitor",
+    page_title="Hardloop Monitor",
     page_icon="🏃‍♂️",
     layout="centered",
     initial_sidebar_state="expanded"
