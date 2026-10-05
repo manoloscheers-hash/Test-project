@@ -75,16 +75,7 @@ if not st.session_state.access_token:
     )
 
     # Grote, goed zichtbare inlogknop voor mobiel
-    st.markdown(
-        f"""
-        <div style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
-            <a href="{authorize_url}" target="_self" style="background-color: #fc4c02; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 5px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
-                🔗 Inloggen met Strava
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    sst.link_button("🔗 Inloggen met Strava", authorize_url, use_container_width=True)
 
 else:
     # --- ZIJBALK VOOR INSTELLINGEN ---
