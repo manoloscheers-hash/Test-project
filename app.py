@@ -16,7 +16,13 @@ st.set_page_config(
 st.markdown("""
     <style>
     [data-testid="stMetricValue"] {
-        font-size: 24px;
+        font-size: 22px; /* Maakt de getallen iets compacter voor mobiel */
+    }
+    /* Dit verkleint specifiek de hoofdtitel op kleine schermen */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 24px !important;
+        }
     }
     .main {
         padding-top: 0rem;
