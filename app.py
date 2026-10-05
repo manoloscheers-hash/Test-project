@@ -257,35 +257,48 @@ else:
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
         with tab_nutrition:
-            st.subheader("🍎 Voeding & Hersteladvies")
-            st.markdown(
-                "Hier zie je per recente training hoeveel calorieën je ongeveer hebt verbrand en wat je herstelbehoefte is.")
+            st.subheader("🍎 Voeding & Hersteladvies per Training")
+            st.markdown("Selecteer hieronder een recente training om het calorieverbruik te zien en gerichte maaltijdvoorbeelden te krijgen voor je herstel.")
 
             if detailed_activities_list:
-                df_acts = pd.DataFrame(detailed_activities_list)
+                activity_labels = [act["label"] for act in detailed_activities_list[:15]]
+                chosen_label = st.selectbox("Kies een training:", activity_labels)
 
-                # Toon de laatste 5 activiteiten specifiek voor voeding
-                st.markdown("### Recente Trainingen & Calorieverbruik")
-                st.dataframe(df_acts.head(10), use_container_width=True, hide_index=True)
+                selected_act = next(act for act in detailed_activities_list if act["label"] == chosen_label)
 
-                # Algemeen advies gebaseerd op de meest recente training of gemiddelde
                 st.markdown("---")
-                st.markdown("### 💡 Herstel- en Voedingsrichtlijnen voor Duurlopers")
+                col_n1, col_n2, col_n3 = st.columns(3)
+                col_n1.metric("Afstand", f"{selected_act['distance']} km")
+                col_n2.metric("Duur", f"{selected_act['time_mins']} min")
+                col_n3.metric("Verbrande Kcal", f"{selected_act['calories']} kcal")
 
-                st.info("""
-                **Direct na je training (0 - 30 min): Herstelwindow**
-                * **Koolhydraten:** Vul je glycogeenvoorraad direct aan omherstel te versnellen (richtlijn: ~1.0 - 1.2 gram per kg lichaamsgewicht in de eerste uren na een zware training).
-                * **Eiwitten:** Neem 20-25 gram eiwit om spierschade te herstellen (bijv. kwark, een shake of kip/noten).
-                """)
+                cals = selected_act['calories']
 
-                st.markdown("""
-                **Voorbeeld herstelmaaltijden (binnenkort volgt hier meer maatwerk):**
-                * *Snelle optie:* Een banaan + een beker chocolademelk of eiwitshake.
-                * *Maaltijd optie:* Rijst met kip/tofu en groenten, of een dikke kom havermout met banaan, pindakaas en honing.
+                carbs_target = int(cals * 0.6 / 4)
+                protein_target = int(st.session_state.body_weight * 0.3)
+
+                st.markdown("### 🎯 Hersteldoel voor deze sessie")
+                st.markdown(f"- **Koolhydraten aanvullen:** ca. **{carbs_target} gram** (om je glycogeenvoorraad op peil te brengen)")
+                st.markdown(f"- **Eiwitten voor spierherstel:** ca. **25 - 30 gram**")
+
+                st.markdown("---")
+                st.markdown("### 🍳 3 Voorbeeldmaaltijden voor Optimaal Herstel")
+
+                st.markdown(f"""
+                **1. De Snelle Shake / Smoothie (Binnen 30 min na afloop)**
+                * *Wat zit erin:* 1 grote banaan, 300 ml magere melk of havermelk, 1 schep eiwitpoeder (of 200g magere kwark), en een handje rood fruit.
+                * *Waarom:* Snel op te nemen koolhydraten en hoogwaardige eiwitten om direct de spierafbraak te stoppen en herstel te starten.
+
+                **2. De Power Havermoutkom (Ideaal na een ochtendloop)**
+                * *Wat zit erin:* 70g havermout gekookt in melk, 1 eetlepel pindakaas, een appel in stukjes, kaneel en een handje ongezouten noten.
+                * *Waarom:* Rijke bron van langzame en snelle koolhydraten met gezonde vetten en eiwitten.
+
+                **3. De Herstel-Avondmaaltijd (Rijst met Kip/Tofu & Groenten)**
+                * *Wat zit erin:* 100g (ongekookte) rijst of volkoren pasta, 125g kipfilet of vegetarische reepjes, een ruime portie gewokte groenten (paprika, broccoliroosjes) en een lichte soyasaus/oosterse saus.
+                * *Waarom:* Vult je glycogeenvoorraad volledig aan voor je volgende training en levert de bouwstenen voor sterkere spieren.
                 """)
             else:
-                st.warning("Geen recente hardloopactiviteiten gevonden om voeding voor te berekenen.")
-
+                st.warning("Geen recente hardloopactiviteiten gevonden.")
     except Exception as e:
         st.error(f"Er ging iets mis bij het ophalen van je Strava-activiteiten: {e}")
         st.plotly_chart(fig, use_container_width=True)
