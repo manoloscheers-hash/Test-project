@@ -264,11 +264,20 @@ else:
                 "Selecteer hieronder een recente training om het calorieverbruik, de hersteltijd en gerichte maaltijdvoorbeelden te bekijken.")
 
             if detailed_activities_list:
-                activity_labels = [act["label"] for act in detailed_activities_list[:15]]
-                chosen_label = st.selectbox("Kies een training:", activity_labels)
+                # Filter alleen activiteiten van de afgelopen 7 dagen voor het voedingstabblad
+                cutoff_7d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+                recent_acts = [act for act in detailed_activities_list if act["datetime"] >= cutoff_7d]
 
-                selected_act = next(act for act in detailed_activities_list if act["label"] == chosen_label)
-
+                if recent_acts:
+                    activity_labels = [act["label"] for act in recent_acts]
+                    chosen_label = st.selectbox("Kies een training (afgelopen 7 dagen):", activity_labels)
+                    selected_act = next(act for act in recent_acts if act["label"] == chosen_label)
+                else:
+                    st.info(
+                        "Je hebt in de afgelopen 7 dagen geen hardloopactiviteiten geregistreerd. Hier is je meest recente training:")
+                    activity_labels = [act["label"] for act in detailed_activities_list[:5]]
+                    chosen_label = st.selectbox("Kies een training:", activity_labels)
+                    selected_act = next(act for act in detailed_activities_list if act["label"] == chosen_label)
                 st.markdown("---")
                 col_n1, col_n2, col_n3 = st.columns(3)
                 col_n1.metric("Afstand", f"{selected_act['distance']} km")
