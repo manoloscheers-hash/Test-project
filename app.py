@@ -75,7 +75,7 @@ if not st.session_state.access_token:
     )
 
     # Grote, goed zichtbare inlogknop voor mobiel
-    sst.link_button("🔗 Inloggen met Strava", authorize_url, use_container_width=True)
+    st.link_button("🔗 Inloggen met Strava", authorize_url, use_container_width=True)
 
 else:
     # --- ZIJBALK VOOR INSTELLINGEN ---
