@@ -174,11 +174,13 @@ else:
                     # Bewaar voor het Voedingstabblad
                     act_name = getattr(act, 'name', 'Hardloopsessie')
                     detailed_activities_list.append({
-                        "Datum": act_date.strftime("%d-%m-%Y %H:%M"),
-                        "Naam": act_name,
-                        "Afstand (km)": round(dist_km, 2),
-                        "Tijd (min)": round(moving_time_mins, 1),
-                        "Verbrande Kcal": round(estimated_cals, 0)
+                        "id": act.id,
+                        "datetime": act_date,
+                        "label": f"{act_date.strftime('%d-%m-%Y')} - {act_name} ({round(dist_km, 1)} km)",
+                        "name": act_name,
+                        "distance": round(dist_km, 2),
+                        "time_mins": round(moving_time_mins, 1),
+                        "calories": round(estimated_cals, 0)
                     })
 
                     act_monday = (act_date - datetime.timedelta(days=act_date.weekday())).date()
