@@ -219,12 +219,12 @@ else:
             })
 
         # --- TABS MAKEN VOOR NAVIGATIE ---
-        tab_acwr, tab_nutrition = st.tabs(["📊 ACWR & Belasting", "🍎 Voeding & Herstel"])
+        tab_acwr, tab_nutrition = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel"])
 
         with tab_acwr:
             acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-            st.subheader("📊 ACWR Overzicht")
+            st.subheader("📊 Belasting Overzicht")
             col1, col2, col3 = st.columns(3)
             col1.metric("Acute (7d)", f"{round(acute_load, 1)}")
             col2.metric("Chronic (4w)", f"{round(chronic_load, 1)}")
