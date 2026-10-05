@@ -283,7 +283,7 @@ else:
                 # Bepaal intensiteit op basis van naam of calorieverbruik per minuut
                 cals_per_min = cals / duration if duration > 0 else 10
 
-                if any(kef in name_lower for k in
+                if any(k in name_lower for k in ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"] or cals_per_min > 13
                        ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or cals_per_min > 13:
                     training_type = "Intensief (Interval / Tempo)"
                     recovery_hours = 48
