@@ -378,7 +378,7 @@ else:
             labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
         )
         fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="wekelijkse_belasting_grafiek")
 
         if weekly_details:
             st.subheader("📋 Historie per week")
