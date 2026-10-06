@@ -131,7 +131,9 @@ else:
         detailed_activities_list = []
 
         for act in activities:
-            if act.type and 'Run' in str(act.type):
+            # Accepteer zowel hardlopen als fietsen
+            act_type_str = str(getattr(act, 'type', ''))
+            if act.type and ('Run' in act_type_str or 'Ride' in act_type_str or 'VirtualRide' in act_type_str):
                 act_date = act.start_date
                 if act_date:
                     dist_meters = float(act.distance) if act.distance else 0.0
@@ -151,32 +153,29 @@ else:
                     avg_hr = float(act.average_heartrate) if hasattr(act,
                                                                      'average_heartrate') and act.average_heartrate else 0.0
 
-                    # Trainingsbelasting berekening
+                    # Calorieën berekening: Fietsen verbrandt over het algemeen iets minder per km dan hardlopen
+                    is_ride = 'Ride' in act_type_str
+                    cal_factor = 0.45 if is_ride else 1.03
+
                     if avg_hr > st.session_state.rest_hr and st.session_state.max_hr > st.session_state.rest_hr:
                         hr_reserve_ratio = (avg_hr - st.session_state.rest_hr) / (
                                     st.session_state.max_hr - st.session_state.rest_hr)
-                        training_load = moving_time_mins * (hr_reserve_ratio * 1.5)
+                        training_load = moving_time_mins * (hr_reserve_ratio * (1.2 if is_ride else 1.5))
                     else:
-                        training_load = dist_km * 10
+                        training_load = dist_km * (4 if is_ride else 10)
 
-                        # Calorieverbruik schatting (globaal hardlopen: ~1 kcal per kg per kilometer)
-                    # Als Strava zelf calorieën meegeeft, pakken we die, anders schatten we het op basis van gewicht & afstand
-                    strava_cals = float(getattr(act, 'kilojoules', 0) / 4.184) if hasattr(act,
-                                                                                          'kilojoules') and act.kilojoules else 0.0
-                    if strava_cals <= 0:
-                        # Ruwe schatting: gewicht (kg) * afstand (km) * 1.03 kcal
-                        estimated_cals = st.session_state.body_weight * dist_km * 1.03
-                    else:
-                        estimated_cals = strava_cals
+                    estimated_cals = st.session_state.body_weight * dist_km * cal_factor
 
                     parsed_activities.append({"datetime": act_date, "load": training_load})
 
-                    # Bewaar voor het Voedingstabblad
-                    act_name = getattr(act, 'name', 'Hardloopsessie')
+                    act_name = getattr(act, 'name', 'Activiteit')
+                    sport_emoji = "🚴‍♂️" if is_ride else "🏃‍♂️"
+
                     detailed_activities_list.append({
                         "id": act.id,
                         "datetime": act_date,
-                        "label": f"{act_date.strftime('%d-%m-%Y')} - {act_name} ({round(dist_km, 1)} km)",
+                        "type": "Fietsen" if is_ride else "Hardlopen",
+                        "label": f"{sport_emoji} {act_date.strftime('%d-%m-%Y')} - {act_name} ({round(dist_km, 1)} km)",
                         "name": act_name,
                         "distance": round(dist_km, 2),
                         "time_mins": round(moving_time_mins, 1),
