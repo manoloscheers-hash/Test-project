@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 import plotly.express as px
 from stravalib import Client
+from streamlit_cropper import st_cropper
 
 # 1. Pagina instellingen
 st.set_page_config(
@@ -367,32 +368,28 @@ else:
             st.warning("Geen activiteiten gevonden voor het geselecteerde sportfilter.")
 
     with tab_fridge:
-        st.subheader("🧑‍🍳 Persoonlijke Chef — Kook op basis van je training & voorraad")
+        st.subheader("📸 Koelkast Chef — Kook op basis van je training & voorraad")
         st.markdown(
             "De AI kijkt naar de training die je hebt geselecteerd in het voedingstabblad en bedenkt een recept dat exact past bij jouw herstelbehoefte van die dag!")
 
         # Controleer of er een geselecteerde training of gefilterde lijst beschikbaar is
         if 'selected_act' in locals() and selected_act:
-            # We gebruiken de data van de training die je in het andere tabblad hebt geselecteerd!
             train_name = selected_act['name']
             train_type_str = selected_act['type']
             target_cals_fridge = int(selected_act['calories'])
             train_dist = selected_act['distance']
 
-            # Bereken de macro's op basis van de werkelijke activiteit
             target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
             target_protein_fridge = int(st.session_state.body_weight * 0.3)
 
             st.success(
                 f"📌 **Gekoppelde training:** {train_type_str} — *{train_name}* ({train_dist} km | **{target_cals_fridge} kcal**)")
 
-            # Toon een nette uitsplitsing van het hersteldoel
             col_f1, col_f2 = st.columns(2)
             col_f1.metric("Doel Energie", f"{target_cals_fridge} kcal")
             col_f2.metric("Doel Eiwit / Koolh.", f"{target_protein_fridge}g E / {target_carbs_fridge}g K")
 
         elif filtered_activities_list:
-            # Fallback als er nog geen training expliciet geselecteerd is, pak de meest recente
             latest_act = filtered_activities_list[0]
             target_cals_fridge = int(latest_act['calories'])
             target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
@@ -401,7 +398,6 @@ else:
             st.info(
                 f"💡 Geen actieve selectie gevonden; we gebruiken je meest recente activiteit: **{latest_act['name']} ({target_cals_fridge} kcal)**")
         else:
-            # Totlijke fallback als er helemaal geen activiteiten zijn
             target_cals_fridge = 650
             target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
             target_protein_fridge = int(st.session_state.body_weight * 0.3)
@@ -409,23 +405,65 @@ else:
 
         st.markdown("---")
 
-        # Upload of foto maken van de koelkast
-        uploaded_image = st.file_uploader("Upload een foto van je koelkast of ingrediënten:",
-                                          type=["jpg", "jpeg", "png"], key="fridge_uploader")
+        # Keuze voor invoermethode: Bestand uploaden of direct camera gebruiken
+        input_methode = st.radio(
+            "Kies invoermethode voor je foto:",
+            ["Bestand / Fotobibliotheek uploaden", "Direct foto maken met camera"],
+            horizontal=True,
+            key="input_methode_crop"
+        )
+
+        uploaded_image = None
+
+        if input_methode == "Bestand / Fotobibliotheek uploaden":
+            uploaded_image = st.file_uploader("Kies een foto uit je bestanden of foto's:", type=["jpg", "jpeg", "png"],
+                                              key="fridge_file_uploader")
+        else:
+            uploaded_image = st.camera_input("Maak een foto van je koelkast / ingrediënten:", key="fridge_camera_input")
 
         if uploaded_image is not None:
-            st.image(uploaded_image, caption="Jouw beschikbare ingrediënten", use_column_width=True)
+            # Optionele beeldverhouding voor het bijsnijden
+            aspect_choice = st.radio(
+                "Kies een uitsnede (optioneel):",
+                ["Vrij", "1:1 (Vierkant)", "16:9 (Breedbeeld)", "4:3 (Standaard)"],
+                index=0,
+                horizontal=True,
+                key="aspect_radio_choice"
+            )
 
-            if st.button("🍳 Genereer Recept voor deze training"):
-                with st.spinner("De AI analyseert je koelkast en stemt het recept af op je trainingsherstel..."):
+            aspect_ratios = {
+                "Vrij": None,
+                "1:1 (Vierkant)": (1, 1),
+                "16:9 (Breedbeeld)": (16, 9),
+                "4:3 (Standaard)": (4, 3)
+            }
+
+            selected_aspect = aspect_ratios[aspect_choice]
+
+            st.info(
+                "✂️ Sleep en pas het kader hieronder aan om de foto bij te snijden op de ingrediënten die je wilt gebruiken.")
+
+            # Activeer de cropper
+            cropped_img = st_cropper(
+                uploaded_image,
+                realtime_update=True,
+                aspect_ratio=selected_aspect,
+                key="fridge_image_cropper"
+            )
+
+            st.markdown("---")
+            st.write("Jouw geselecteerde uitsnede:")
+            st.image(cropped_img, caption="Bijgesneden ingrediënten", width=400)
+
+            if st.button("🍳 Genereer Recept voor deze training", key="generate_recipe_btn"):
+                with st.spinner(
+                        "De AI analyseert je bijgesneden foto en stemt het recept af op je trainingsherstel..."):
                     try:
-                        from PIL import Image
                         from google import genai
+                        import io
 
-                        # Haal de API-sleutel veilig op uit Streamlit Secrets
                         api_key = st.secrets["GEMINI_API_KEY"]
                         client = genai.Client(api_key=api_key)
-                        image = Image.open(uploaded_image)
 
                         prompt = f"""
                         Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
@@ -445,17 +483,28 @@ else:
                         4. **Een duidelijke bereidingswijze** in stappen.
                         """
 
+                        # Converteer het bijgesneden Pillow Image object naar bytes voor de AI
+                        img_byte_arr = io.BytesIO()
+                        # Zorg dat de afbeelding correct wordt opgeslagen als JPEG/PNG
+                        img_format = cropped_img.format if cropped_img.format else 'JPEG'
+                        cropped_img.save(img_byte_arr, format=img_format)
+                        image_bytes = img_byte_arr.getvalue()
+
+                        prompt_contents = [
+                            {"mime_type": "image/jpeg", "data": image_bytes},
+                            prompt
+                        ]
+
                         response = client.models.generate_content(
                             model='gemini-3.8-flash',
-                            contents=[image, prompt]
+                            contents=prompt_contents
                         )
 
                         st.markdown("---")
-                        st.markdown("### 🧑‍🍳 Jouw AI Herstelrecept op maat:")
+                        st.markdown("### 🧑‍‍🍳 Jouw AI Herstelrecept op maat:")
                         st.markdown(response.text)
 
                     except Exception as e:
                         st.error(f"Er ging iets mis bij het analyseren van de foto: {e}")
         else:
-            st.info(
-                "Upload hierboven een foto van je koelkast om een recept te genereren dat past bij je gekozen training.")
+            st.info("Upload hierboven een foto of maak een foto met je camera om te beginnen.")
