@@ -32,11 +32,7 @@ st.markdown("""
 st.title("Hardloop & Herstel Monitor")
 st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je Strava-activiteiten.")
 
-st.sidebar.markdown("---")
-sport_filter = st.sidebar.selectbox(
-    "🎯 Filter Activiteiten:",
-    ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
-)
+
 
 # Vaste Client ID en Secret
 DEFAULT_CLIENT_ID = 284865
@@ -115,6 +111,12 @@ else:
         st.session_state.access_token = None
         st.session_state.refresh_token = None
         st.rerun()
+
+    st.sidebar.markdown("---")
+    sport_filter = st.sidebar.selectbox(
+        "🎯 Filter Activiteiten:",
+        ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
+    )
 
     # --- DATA OPHALEN & BEREKENEN ---
     try:
