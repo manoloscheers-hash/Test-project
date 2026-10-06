@@ -471,18 +471,21 @@ else:
                                     """
 
                         # Automatische retry-loop voor drukte (503 errors)
+                        # Slimme retry-loop met toenemende wachttijd voor drukte (503 errors)
                         max_retries = 3
                         response = None
                         for attempt in range(max_retries):
                             try:
                                 response = client.models.generate_content(
-                                    model='gemini-2.0-flash',
+                                    model='gemini-3.8-flash',
                                     contents=[cropped_img, prompt]
                                 )
                                 break
                             except Exception as api_err:
-                                if "503" in str(api_err) and attempt < max_retries - 1:
-                                    time.sleep(3)  # Wacht 3 seconden en probeer opnieuw
+                                err_str = str(api_err)
+                                if "503" in err_str and attempt < max_retries - 1:
+                                    # Wacht per poging iets langer (3 sec, daarna 6 sec)
+                                    time.sleep((attempt + 1) * 3)
                                     continue
                                 else:
                                     raise api_err
