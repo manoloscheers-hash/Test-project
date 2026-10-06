@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 from stravalib import Client
 from streamlit_cropper import st_cropper
+from PIL import Image
 
 # 1. Pagina instellingen
 st.set_page_config(
