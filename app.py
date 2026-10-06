@@ -239,7 +239,7 @@ else:
         acute_load, chronic_load = 0.0, 1.0
 
     # --- TABS MAKEN VOOR NAVIGATIE ---
-    tab_acwr, tab_nutrition, tab_fridge = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel", "📸 Koelkast Chef"])
+    tab_acwr, tab_nutrition, tab_fridge = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel", "Persoonlijke Chef"])
 
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
@@ -367,23 +367,57 @@ else:
             st.warning("Geen activiteiten gevonden voor het geselecteerde sportfilter.")
 
     with tab_fridge:
-        st.subheader("📸 Koelkast Chef — Kook op basis van wat je hebt")
+        st.subheader("📸 Koelkast Chef — Kook op basis van je training & voorraad")
         st.markdown(
-            "Maak of upload een foto van de inhoud van je koelkast of voorraadkast. De AI bedenkt direct een herstelrecept op maat!")
+            "De AI kijkt naar de training die je hebt geselecteerd in het voedingstabblad en bedenkt een recept dat exact past bij jouw herstelbehoefte van die dag!")
 
-        uploaded_image = st.file_uploader("Upload een foto van je koelkast / ingrediënten:",
-                                          type=["jpg", "jpeg", "png"])
+        # Controleer of er een geselecteerde training of gefilterde lijst beschikbaar is
+        if 'selected_act' in locals() and selected_act:
+            # We gebruiken de data van de training die je in het andere tabblad hebt geselecteerd!
+            train_name = selected_act['name']
+            train_type_str = selected_act['type']
+            target_cals_fridge = int(selected_act['calories'])
+            train_dist = selected_act['distance']
 
-        target_cals_fridge = st.slider("Doel calorieën voor dit recept:", min_value=300, max_value=1200, value=650,
-                                       step=50)
-        target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
-        target_protein_fridge = int(target_cals_fridge * 0.25 / 4)
+            # Bereken de macro's op basis van de werkelijke activiteit
+            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
+            target_protein_fridge = int(st.session_state.body_weight * 0.3)
+
+            st.success(
+                f"📌 **Gekoppelde training:** {train_type_str} — *{train_name}* ({train_dist} km | **{target_cals_fridge} kcal**)")
+
+            # Toon een nette uitsplitsing van het hersteldoel
+            col_f1, col_f2 = st.columns(2)
+            col_f1.metric("Doel Energie", f"{target_cals_fridge} kcal")
+            col_f2.metric("Doel Eiwit / Koolh.", f"{target_protein_fridge}g E / {target_carbs_fridge}g K")
+
+        elif filtered_activities_list:
+            # Fallback als er nog geen training expliciet geselecteerd is, pak de meest recente
+            latest_act = filtered_activities_list[0]
+            target_cals_fridge = int(latest_act['calories'])
+            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
+            target_protein_fridge = int(st.session_state.body_weight * 0.3)
+
+            st.info(
+                f"💡 Geen actieve selectie gevonden; we gebruiken je meest recente activiteit: **{latest_act['name']} ({target_cals_fridge} kcal)**")
+        else:
+            # Totlijke fallback als er helemaal geen activiteiten zijn
+            target_cals_fridge = 650
+            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
+            target_protein_fridge = int(st.session_state.body_weight * 0.3)
+            st.warning("⚠️ Geen activiteiten gevonden. Standaard hersteldoel van 650 kcal wordt gebruikt.")
+
+        st.markdown("---")
+
+        # Upload of foto maken van de koelkast
+        uploaded_image = st.file_uploader("Upload een foto van je koelkast of ingrediënten:",
+                                          type=["jpg", "jpeg", "png"], key="fridge_uploader")
 
         if uploaded_image is not None:
-            st.image(uploaded_image, caption="Jouw ingrediënten", use_column_width=True)
+            st.image(uploaded_image, caption="Jouw beschikbare ingrediënten", use_column_width=True)
 
-            if st.button("🍳 Genereer Recept met deze ingrediënten"):
-                with st.spinner("De AI kijkt in je koelkast en berekent het perfecte herstelrecept..."):
+            if st.button("🍳 Genereer Recept voor deze training"):
+                with st.spinner("De AI analyseert je koelkast en stemt het recept af op je trainingsherstel..."):
                     try:
                         from PIL import Image
                         from google import genai
@@ -392,19 +426,20 @@ else:
                         client = genai.Client()
 
                         prompt = f"""
-                        Je bent een sportdiëtist en chef-kok. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
+                        Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
                         Bekijk de foto goed en identificeer welke bruikbare ingrediënten hierop te zien zijn.
 
-                        Bedenk een lekker, praktisch herstelrecept dat past bij een duursporter (hardloper/fietser).
-                        Het recept moet voldoen aan de volgende voedingsdoelen:
+                        De gebruiker heeft zojuist een training voltooid en heeft exact de volgende voedingsdoelen nodig voor herstel:
                         - Totaal energie: ca. {target_cals_fridge} kcal
                         - Koolhydraten: ca. {target_carbs_fridge} gram
                         - Eiwitten: ca. {target_protein_fridge} gram
 
+                        Bedenk een lekker, praktisch herstelrecept dat *alleen* (of voornamelijk) gebruikmaakt van de ingrediënten die je op de foto ziet.
+
                         Geef in je antwoord:
-                        1. **Een lijst van gedetecteerde ingrediënten** die je op de foto ziet en gebruikt.
+                        1. **Een lijst van gedetecteerde ingrediënten** van de foto die je gebruikt.
                         2. **De naam van het recept**.
-                        3. **De geschatte macro's en calorieën**.
+                        3. **De geschatte macro's en calorieën** (zorg dat deze dicht bij de doelen van {target_cals_fridge} kcal liggen).
                         4. **Een duidelijke bereidingswijze** in stappen.
                         """
 
@@ -414,10 +449,11 @@ else:
                         )
 
                         st.markdown("---")
-                        st.markdown("### 🧑‍🍳 Jouw AI Recept op maat:")
+                        st.markdown("### 🧑‍🍳 Jouw AI Herstelrecept op maat:")
                         st.markdown(response.text)
 
                     except Exception as e:
                         st.error(f"Er ging iets mis bij het analyseren van de foto: {e}")
         else:
-            st.info("Upload hierboven een foto om te beginnen.")
+            st.info(
+                "Upload hierboven een foto van je koelkast om een recept te genereren dat past bij je gekozen training.")
