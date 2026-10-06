@@ -379,7 +379,7 @@ else:
             st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
     with tab_nutrition:
-        st.subheader("🍎 Uitgebreid Voeding- & Hersteladvies")
+        st.subheader("🍎 Voeding- & Hersteladvies")
         st.markdown(
             "Selecteer een training om een nauwkeurige herstelanalyse, gerichte macro's en een uitgebreide variatie aan maaltijdrecepten te bekijken."
         )
