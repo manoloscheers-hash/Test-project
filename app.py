@@ -27,8 +27,7 @@ st.markdown("""
     div.stButton > button {
         border-radius: 8px;
         font-weight: 500;
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
+        border: 1px solid rgba(150, 150, 150, 0.2);
         transition: all 0.2s ease-in-out;
     }
 
@@ -44,19 +43,12 @@ st.markdown("""
         border-bottom-color: #FF334B !important;
     }
 
-    /* 4. Subtiele kaart-containers voor metingen en gerechten */
+    /* 4. Subtiele kaart-containers die zich aanpassen aan Light/Dark mode */
     div[data-testid="stMetric"], div[data-testid="stVerticalBlock"] > div[style*="border-color"] {
         border-radius: 10px;
         padding: 12px;
-        background-color: #ffffff;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    }
-
-    /* 5. Sidebar een rustige, eigen achtergrondtint geven */
-    [data-testid="stSidebar"] {
-        background-color: #f8fafc;
-        border-right: 1px solid #f1f5f9;
+        border: 1px solid rgba(150, 150, 150, 0.15);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     </style>
 """, unsafe_allow_html=True)
