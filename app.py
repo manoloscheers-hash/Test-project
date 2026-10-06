@@ -454,89 +454,178 @@ else:
             st.markdown("### 🍳 Mogelijke recepten")
 
             # SLIMME RECEPTEN DATABASE (Hier kun je heel eenvoudig recepten aan toevoegen!)
+            # SLIMME RECEPTEN DATABASE (Netjes opgesplitst in lijsten voor ingrediënten en stappen)
             recipe_database = {
                 "zwaar": [
                     {
                         "title": "Power Haver-Kwark Bowl met Rood Fruit",
                         "kcal": 550, "carbs": 70, "protein": 35,
-                        "ingredients": "70g havermout, 200g magere kwark, 1 banaan, handje blauwe bessen, 1 el chiazaad, scheutje honing.",
-                        "steps": "1. Meng de havermout met de kwark en een scheutje water of melk.\n2. Snijd de banaan in plakjes en verdeel samen met het rode fruit, chiazaad en de honing over de bowl."
+                        "ingredients": [
+                            "70g havermout",
+                            "200g magere kwark",
+                            "1 banaan",
+                            "Handje blauwe bessen",
+                            "1 el chiazaad",
+                            "Scheutje honing"
+                        ],
+                        "steps": [
+                            "Meng de havermout met de kwark en een scheutje water of melk.",
+                            "Snijd de banaan in plakjes en verdeel samen met het rode fruit, chiazaad en de honing over de bowl."
+                        ]
                     },
                     {
                         "title": "Volkoren Wrap met Tonijn, Avocado & Bonen",
                         "kcal": 650, "carbs": 60, "protein": 40,
-                        "ingredients": "2 volkoren wraps, 1 blikje tonijn (op water), 1/2 avocado, 50g kidneybonen, sla, komkommer, yoghurt-knoflookdressing.",
-                        "steps": "1. Prak de avocado en meng met de uitgelekte tonijn en kidneybonen.\n2. Leg sla op de wraps, verdeel het tonijnmengsel erover, voeg komkommer toe en rol strak op."
+                        "ingredients": [
+                            "2 volkoren wraps",
+                            "1 blikje tonijn (op water)",
+                            "1/2 avocado",
+                            "50g kidneybonen",
+                            "Sla en komkommer",
+                            "Yoghurt-knoflookdressing"
+                        ],
+                        "steps": [
+                            "Prak de avocado en meng met de uitgelekte tonijn en kidneybonen.",
+                            "Leg sla op de wraps, verdeel het tonijnmengsel erover, voeg komkommer toe en rol strak op."
+                        ]
                     },
                     {
                         "title": "Gezonde Pasta Bolognese met Rundergehakt & Champignons",
                         "kcal": 750, "carbs": 85, "protein": 45,
-                        "ingredients": "90g volkoren spaghetti, 130g mager rundergehakt, 150g champignons, 1 ui, 2 knoflookteentjes, 200ml passata, Italiaanse kruiden.",
-                        "steps": "1. Kook de pasta volgens aanwijzing.\n2. Fruit ui en knoflook, bak het gehakt rul en bak de champignons mee.\n3. Voeg de passata en kruiden toe, laat pruttelen en serveer over de pasta."
+                        "ingredients": [
+                            "90g volkoren spaghetti",
+                            "130g mager rundergehakt",
+                            "150g champignons",
+                            "1 ui & 2 knoflookteentjes",
+                            "200ml passata (gezeefde tomaten)",
+                            "Italiaanse kruiden"
+                        ],
+                        "steps": [
+                            "Kook de pasta volgens de aanwijzingen op de verpakking.",
+                            "Fruit de ui en knoflook, bak het gehakt rul en bak de champignons mee.",
+                            "Voeg de passata en kruiden toe, laat kort pruttelen en serveer over de pasta."
+                        ]
                     },
                     {
                         "title": "Rijstwafels met Pindakaas & Banaan",
                         "kcal": 300, "carbs": 35, "protein": 10,
-                        "ingredients": "4 rijstwafels, 2 el 100% pindakaas, 1 banaan in plakjes, snufje kaneel.",
-                        "steps": "1. Besmeer de rijstwafels rijkelijk met pindakaas.\n2. Leg de plakjes banaan erop en maak af met een snufje kaneel."
+                        "ingredients": [
+                            "4 rijstwafels",
+                            "2 el 100% pindakaas",
+                            "1 banaan in plakjes",
+                            "Snufje kaneel"
+                        ],
+                        "steps": [
+                            "Besmeer de rijstwafels rijkelijk met de pindakaas.",
+                            "Leg de plakjes banaan erop en maak af met een snufje kaneel."
+                        ]
                     }
                 ],
                 "middel": [
                     {
                         "title": "Proteïne Yoghurt met Cruesli & Appel",
                         "kcal": 420, "carbs": 50, "protein": 30,
-                        "ingredients": "250ml Griekse yoghurt 0% of Skyr, 40g volkoren granen/cruesli, 1 appel in stukjes, snuf kaneel.",
-                        "steps": "1. Schep de Skyr in een kom.\n2. Voeg de knapperige granen toe, garneer met appeltjes en bestrooi met kaneel."
+                        "ingredients": [
+                            "250ml Griekse yoghurt 0% of Skyr",
+                            "40g volkoren granen / cruesli",
+                            "1 appel in stukjes",
+                            "Snufje kaneel"
+                        ],
+                        "steps": [
+                            "Schep de Skyr in een mooie kom.",
+                            "Voeg de knapperige granen toe, garneer met de stukjes appel en bestrooi met kaneel."
+                        ]
                     },
                     {
                         "title": "Omelet Wrap met Kipfilet en Spinazie",
                         "kcal": 480, "carbs": 35, "protein": 38,
-                        "ingredients": "2 eieren, scheutje melk, handje verse spinazie, 70g kipfilet plakjes, 1 volkoren boterham of wrap.",
-                        "steps": "1. Klop de eieren los en bak een dunne omelet in de pan met wat spinazie erdoor.\n2. Leg dit op de wrap of serveer naast de volkoren boterham met kipfilet."
+                        "ingredients": [
+                            "2 eieren en een scheutje melk",
+                            "Handje verse spinazie",
+                            "70g kipfilet plakjes",
+                            "1 volkoren wrap of boterham"
+                        ],
+                        "steps": [
+                            "Klop de eieren los en bak een dunne omelet in de pan met de spinazie erdoor.",
+                            "Leg de omelet op de wrap of serveer samen met de kipfilet."
+                        ]
                     },
                     {
                         "title": "Wokschotel met Kip, Noedels & Oosterse Groenten",
                         "kcal": 580, "carbs": 65, "protein": 35,
-                        "ingredients": "75g volkoren noedels of mie, 120g kipfilet reepjes, 200g wokgroenten, 2 el sojasaus, gemberpoeder, 1 tl sesamolie.",
-                        "steps": "1. Kook de noedels.\n2. Bak de kip in de wok, voeg de groenten toe.\n3. Voeg de noedels, sojasaus en sesamolie toe en wok nog 2 minuten goed door."
+                        "ingredients": [
+                            "75g volkoren noedels of mie",
+                            "120g kipfilet reepjes",
+                            "200g wokgroenten",
+                            "2 el sojasaus, gemberpoeder & 1 tl sesamolie"
+                        ],
+                        "steps": [
+                            "Kook de noedels volgens de aanwijzingen.",
+                            "Bak de kip in de wokpan en voeg de wokgroenten toe.",
+                            "Voeg de noedels, sojasaus en sesamolie toe en wok het geheel nog 2 minuten door."
+                        ]
                     }
                 ],
                 "licht": [
                     {
                         "title": "Lichte Smoothie van Rood Fruit & Kwark",
                         "kcal": 300, "carbs": 40, "protein": 22,
-                        "ingredients": "150g diepvries rood fruit, 150ml magere kwark, 100ml water of amandelmelk.",
-                        "steps": "1. Blend alle ingrediënten in een blender tot een gladde, frisse smoothie."
+                        "ingredients": [
+                            "150g diepvries rood fruit",
+                            "150ml magere kwark",
+                            "100ml water of amandelmelk"
+                        ],
+                        "steps": [
+                            "Voeg alle ingrediënten toe aan een blender.",
+                            "Blend tot een gladde, frisse en lichte herstelsmoothie."
+                        ]
                     },
                     {
                         "title": "Volkoren Boterhammen met Hüttenkäse & Komkommer",
                         "kcal": 350, "carbs": 35, "protein": 25,
-                        "ingredients": "3 volkoren boterhammen, 100g hüttenkäse, halve komkommer in plakjes, peper en zout.",
-                        "steps": "1. Besmeer de sneetjes brood met een royale laag hüttenkäse.\n2. Beleg met plakjes komkommer en breng op smaak met peper en zout."
+                        "ingredients": [
+                            "3 volkoren boterhammen",
+                            "100g hüttenkäse",
+                            "Halve komkommer in plakjes",
+                            "Peper en zout naar smaak"
+                        ],
+                        "steps": [
+                            "Besmeer de sneetjes brood met een royale laag hüttenkäse.",
+                            "Beleg met de plakjes komkommer en breng op smaak met peper en zout."
+                        ]
                     },
                     {
                         "title": "Frisse Salade met Quinoa, Feta & Kikkererwten",
                         "kcal": 450, "carbs": 50, "protein": 20,
-                        "ingredients": "65g gekookte quinoa, 100g kikkererwten, 40g feta (light), cherrytomaatjes, komkommer, dressing van olijfolie en citroensap.",
-                        "steps": "1. Meng de gekookte quinoa met uitgespoelde kikkererwten en verse groenten.\n2. Verkruimel de feta erboven en besprenkel met de dressing."
+                        "ingredients": [
+                            "65g gekookte quinoa",
+                            "100g kikkererwten (uit blik)",
+                            "40g feta (light)",
+                            "Cherrytomaatjes, komkommer en dressing van olijfolie/citroen"
+                        ],
+                        "steps": [
+                            "Meng de gekookte quinoa met de uitgespoelde kikkererwten en verse groenten.",
+                            "Verkruimel de feta erboven en besprenkel met de frisse dressing."
+                        ]
                     }
                 ]
             }
 
-            # Automatisch de recepten inladen op basis van de categorie
+            # Automatisch de recepten inladen en netjes onder elkaar tonen
             available_recipes = recipe_database.get(meal_cat, recipe_database["middel"])
 
-            for idx, recipe in enumerate(available_recipes):
+            for recipe in available_recipes:
                 with st.expander(f"🍽️ {recipe['title']} (ca. {recipe['kcal']} kcal)"):
-                    st.markdown(f"""
-                    * **Energie:** ca. **{recipe['kcal']} kcal** | Koolhydraten: ~{recipe['carbs']}g | Eiwitten: ~{recipe['protein']}g
+                    st.markdown(
+                        f"**Energie:** ca. **{recipe['kcal']} kcal** | Koolhydraten: ~{recipe['carbs']}g | Eiwitten: ~{recipe['protein']}g")
 
-                    **Ingrediënten:**
-                    * {recipe['ingredients']}
+                    st.markdown("**Ingrediënten:**")
+                    for ing in recipe['ingredients']:
+                        st.markdown(f"- {ing}")
 
-                    **Bereidingswijze:**
-                    {recipe['steps']}
-                    """)
+                    st.markdown("**Bereidingswijze:**")
+                    for s_idx, step in enumerate(recipe['steps'], 1):
+                        st.markdown(f"{s_idx}. {step}")
         else:
             st.warning("Geen activiteiten gevonden om voedingsadvies voor te genereren.")
 
