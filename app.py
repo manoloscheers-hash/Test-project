@@ -8,11 +8,44 @@ from PIL import Image
 
 # 1. Pagina instellingen
 st.set_page_config(
+
     page_title="Hardloop & Voedings Monitor",
     page_icon="🏃‍♂️",
     layout="centered",
     initial_sidebar_state="expanded"
 )
+
+st.markdown("""
+    <style>
+    /* Algemene rustige achtergrond en strakke marges */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    /* Knoppen een moderne, zachte uitstraling geven */
+    div.stButton > button {
+        border-radius: 8px;
+        font-weight: 500;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Subtiele hover-effecten voor knoppen */
+    div.stButton > button:hover {
+        border-color: #ff4b4b;
+        color: #ff4b4b;
+    }
+
+    /* Strakke schaduw en afgeronde hoeken voor elementen / containers */
+    div[data-testid="stVerticalBlock"] > div[style*="border"] {
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Mobielvriendelijke CSS stijlen
 st.markdown("""
