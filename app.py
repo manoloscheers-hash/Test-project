@@ -247,7 +247,7 @@ else:
             })
 
         # --- TABS MAKEN VOOR NAVIGATIE ---
-        tab_acwr, tab_nutrition = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel"])
+        tab_acwr, tab_nutrition = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel", "Test in progress (Persoonlijke chef"])
 
         with tab_acwr:
             acwr = acute_load / chronic_load if chronic_load > 0 else 0
