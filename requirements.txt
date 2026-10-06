@@ -3,3 +3,4 @@ stravalib
 pandas
 plotly
 requests
+google-genai

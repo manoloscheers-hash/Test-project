@@ -486,5 +486,69 @@ else:
             df_details = pd.DataFrame(weekly_details)
             st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
+
+
+
     except Exception as e:
         st.error(f"Er ging iets mis bij het ophalen van je Strava-activiteiten: {e}")
+
+        with tab_fridge:
+            st.subheader("📸 Koelkast Chef — Kook op basis van wat je hebt")
+            st.markdown(
+                "Maak of upload een foto van de inhoud van je koelkast of voorraadkast. De AI bedenkt direct een herstelrecept op maat dat past bij je actieve doel!")
+
+            # Upload of foto maken
+            uploaded_image = st.file_uploader("Upload een foto van je koelkast / ingrediënten:",
+                                              type=["jpg", "jpeg", "png"])
+
+            # Optioneel: als je wilt koppelen aan een gekozen training voor de exacte calorieën
+            target_cals_fridge = st.slider("Doel calorieën voor dit recept:", min=300, max=1200, value=650, step=50)
+            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
+            target_protein_fridge = int(target_cals_fridge * 0.25 / 4)
+
+            if uploaded_image is not None:
+                # Toon de geuploade afbeelding in de app
+                st.image(uploaded_image, caption="Jouw ingrediënten", use_column_width=True)
+
+                if st.button("🍳 Genereer Recept met deze ingrediënten"):
+                    with st.spinner("De AI kijkt in je koelkast en berekent het perfecte herstelrecept..."):
+                        try:
+                            from PIL import Image
+                            from google import genai
+
+                            image = Image.open(uploaded_image)
+
+                            # Initialiseer de GenAI client
+                            client = genai.Client()
+
+                            prompt = f"""
+                                            Je bent een sportdiëtist en chef-kok. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
+                                            Bekijk de foto goed en identificeer welke bruikbare ingrediënten hierop te zien zijn.
+
+                                            Bedenk een lekker, praktisch herstelrecept dat past bij een duursporter (hardloper/fietser).
+                                            Het recept moet voldoen aan de volgende voedingsdoelen:
+                                            - Totaal energie: ca. {target_cals_fridge} kcal
+                                            - Koolhydraten: ca. {target_carbs_fridge} gram
+                                            - Eiwitten: ca. {target_protein_fridge} gram
+
+                                            Geef in je antwoord:
+                                            1. **Een lijst van gedetecteerde ingrediënten** die je op de foto ziet en gebruikt.
+                                            2. **De naam van het recept**.
+                                            3. **De geschatte macro's en calorieën**.
+                                            4. **Een duidelijke bereidingswijze** in stappen.
+                                            """
+
+                            # Correcte aanroep via de Google GenAI SDK
+                            response = client.models.generate_content(
+                                model='gemini-2.5-flash',
+                                contents=[image, prompt]
+                            )
+
+                            st.markdown("---")
+                            st.markdown("### 🧑‍🍳 Jouw AI Recept op maat:")
+                            st.markdown(response.text)
+
+                        except Exception as e:
+                            st.error(f"Er ging iets mis bij het analyseren van de foto: {e}")
+            else:
+                st.info("Upload hierboven een foto om te beginnen.")
