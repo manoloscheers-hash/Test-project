@@ -447,38 +447,48 @@ else:
                         "De AI analyseert je bijgesneden foto en stemt het recept af op je trainingsherstel..."):
                     try:
                         from google import genai
-                        import io
+                        import time
 
                         api_key = st.secrets["GEMINI_API_KEY"]
                         client = genai.Client(api_key=api_key)
 
                         prompt = f"""
-                        Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
-                        Bekijk de foto goed en identificeer welke bruikbare ingrediënten hierop te zien zijn.
+                                    Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
+                                    Bekijk de foto goed en identificeer welke bruikbare ingrediënten hierop te zien zijn.
 
-                        De gebruiker heeft zojuist een training voltooid en heeft exact de volgende voedingsdoelen nodig voor herstel:
-                        - Totaal energie: ca. {target_cals_fridge} kcal
-                        - Koolhydraten: ca. {target_carbs_fridge} gram
-                        - Eiwitten: ca. {target_protein_fridge} gram
+                                    De gebruiker heeft zojuist een training voltooid en heeft exact de volgende voedingsdoelen nodig voor herstel:
+                                    - Totaal energie: ca. {target_cals_fridge} kcal
+                                    - Koolhydraten: ca. {target_carbs_fridge} gram
+                                    - Eiwitten: ca. {target_protein_fridge} gram
 
-                        Bedenk een lekker, praktisch herstelrecept dat *alleen* (of voornamelijk) gebruikmaakt van de ingrediënten die je op de foto ziet.
+                                    Bedenk een lekker, praktisch herstelrecept dat *alleen* (of voornamelijk) gebruikmaakt van de ingrediënten die je op de foto ziet.
 
-                        Geef in je antwoord:
-                        1. **Een lijst van gedetecteerde ingrediënten** van de foto die je gebruikt.
-                        2. **De naam van het recept**.
-                        3. **De geschatte macro's en calorieën** (zorg dat deze dicht bij de doelen van {target_cals_fridge} kcal liggen).
-                        4. **Een duidelijke bereidingswijze** in stappen.
-                        """
+                                    Geef in je antwoord:
+                                    1. **Een lijst van gedetecteerde ingrediënten** van de foto die je gebruikt.
+                                    2. **De naam van het recept**.
+                                    3. **De geschatte macro's en calorieën** (zorg dat deze dicht bij de doelen van {target_cals_fridge} kcal liggen).
+                                    4. **Een duidelijke bereidingswijze** in stappen.
+                                    """
 
-                        # Converteer het bijgesneden Pillow Image object naar bytes voor de AI
-                        # Geef de bijgesneden afbeelding en de prompt direct als lijst mee aan het model
-                        response = client.models.generate_content(
-                            model='gemini-2.5-flash',
-                            contents=[cropped_img, prompt]
-                        )
+                        # Automatische retry-loop voor drukte (503 errors)
+                        max_retries = 3
+                        response = None
+                        for attempt in range(max_retries):
+                            try:
+                                response = client.models.generate_content(
+                                    model='gemini-3.8-flash',
+                                    contents=[cropped_img, prompt]
+                                )
+                                break
+                            except Exception as api_err:
+                                if "503" in str(api_err) and attempt < max_retries - 1:
+                                    time.sleep(3)  # Wacht 3 seconden en probeer opnieuw
+                                    continue
+                                else:
+                                    raise api_err
 
                         st.markdown("---")
-                        st.markdown("### 🧑‍‍🍳 Jouw AI Herstelrecept op maat:")
+                        st.markdown("### 🧑‍🍳 Jouw AI Herstelrecept op maat:")
                         st.markdown(response.text)
 
                     except Exception as e:
