@@ -422,8 +422,10 @@ else:
                         from PIL import Image
                         from google import genai
 
+                        # Haal de API-sleutel veilig op uit Streamlit Secrets
+                        api_key = st.secrets["GEMINI_API_KEY"]
+                        client = genai.Client(api_key=api_key)
                         image = Image.open(uploaded_image)
-                        client = genai.Client()
 
                         prompt = f"""
                         Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
@@ -444,7 +446,7 @@ else:
                         """
 
                         response = client.models.generate_content(
-                            model='gemini-2.5-flash',
+                            model='gemini-3.8-flash',
                             contents=[image, prompt]
                         )
 
