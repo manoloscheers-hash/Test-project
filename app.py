@@ -419,7 +419,7 @@ else:
                 recovery_hours = 36
                 recovery_status = "⚡ Explosieve belasting — Goed herstel van glycogeen en spieren aanbevolen."
                 meal_cat = "zwaar"
-            elif duration > 90 or cals > 700:
+            elif duration > 90 or cals > 850:
                 training_type = "Lange Duurloop (LSD)"
                 recovery_hours = 40
                 recovery_status = "🟠 Grote duurbelasting — Uitgebreid herstel van vocht en koolhydraten nodig."
@@ -440,20 +440,20 @@ else:
                 recovery_status = "🟢 Minimale belasting — Vrijwel direct weer fris."
                 meal_cat = "licht"
 
-            st.markdown("### ⏱ Genuanceerde Herstelanalyse")
+            st.markdown("### ⏱ Herstelanalyse")
             st.info(
                 f"**Sectortype:** {training_type}\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
             carbs_target = int(cals * 0.55 / 4)
             protein_target = int(st.session_state.body_weight * 0.35)
 
-            st.markdown("### 🎯 Doelstellingen voor deze sessie")
+            st.markdown("### 🎯 Herstel aanraders")
             col_m1, col_m2 = st.columns(2)
             col_m1.metric("Koolhydraten aanvullen", f"ca. {carbs_target} gram")
             col_m2.metric("Eiwitten (Spierherstel)", f"ca. {protein_target} gram")
 
             st.markdown("---")
-            st.markdown("### 🍳 Uitgebreide Receptendatabase")
+            st.markdown("### 🍳 Mogelijke recepten")
 
             # SLIMME RECEPTEN DATABASE
             recipe_database = {
