@@ -269,7 +269,6 @@ else:
         else:
             filtered_activities_list = detailed_activities_list
 
-        # Bereken wekelijkse historie op basis van de GEFILTERDE activiteitenlijst
         filtered_raw_weeks = {m_date: {"dist": 0.0, "load": 0.0, "hrs": [], "times": 0.0, "cals": 0.0} for m_date in weeks_list}
         for act in filtered_activities_list:
             act_monday = act["start_monday"]
@@ -337,27 +336,24 @@ else:
         else:
             st.error("🔴 **Hoog risico:** Grote kans op overbelasting! Doe rustig aan.")
 
-            # --- STUKJE CODE VOOR DE POPUP INFORMATIEKNOP ---
-            col_title, col_info = st.columns([6, 1])
-            with col_title:
-                st.subheader("📈 Wekelijkse Belasting")
-            with col_info:
-                with st.popover("ℹ️ Uitleg"):
-                    st.markdown("### Hoe wordt de belasting berekend?")
-                    st.markdown(
-                        "De trainingsbelasting combineert de **duur** en **intensiteit** van al je trainingen:\n\n"
-                        "- **Hartslagreserve:** Er wordt gekeken naar hoeveel tijd je boven je rusthartslag hebt getraind ten opzichte van je maximale hartslag.\n"
-                        "- **Weging per sport:** Fietsen en hardlopen hebben een eigen vermenigvuldigingsfactor voor de impact op je lichaam.\n"
-                        "- **Doel:** Dit helpt je om je Acute vs. Chronic workload (ACWR) in de gaten te houden zodat je niet overbelast raakt!"
-                    )
+        # Koptekst + Info knop naast elkaar
+        col_title, col_info = st.columns([6, 1])
+        with col_title:
+            st.subheader("📈 Wekelijkse Belasting")
+        with col_info:
+            with st.popover("ℹ️ Uitleg"):
+                st.markdown("### Hoe wordt de belasting berekend?")
+                st.markdown(
+                    "De trainingsbelasting combineert de **duur** en **intensiteit** van al je trainingen:\n\n"
+                    "- **Hartslagreserve:** Er wordt gekeken naar hoeveel tijd je boven je rusthartslag hebt getraind ten opzichte van je maximale hartslag.\n"
+                    "- **Weging per sport:** Fietsen en hardlopen hebben een eigen vermenigvuldigingsfactor voor de impact op je lichaam.\n"
+                    "- **Doel:** Dit helpt je om je Acute vs. Chronic workload (ACWR) in de gaten te houden zodat je niet overbelast raakt!"
+                )
 
-            fig = px.line(
-                chart_df, x="Datum", y="Trainingsbelasting", markers=True,
-                labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
-            )
-            fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
-            st.plotly_chart(fig, use_container_width=True)
-
+        fig = px.line(
+            chart_df, x="Datum", y="Trainingsbelasting", markers=True,
+            labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
+        )
         fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -411,7 +407,7 @@ else:
                 recovery_hours = 24
                 recovery_status = "🟢 Lichte belasting — Snelle en eenvoudige hersteltijd."
 
-            st.markdown("### ⏱️️ Geschatte Hersteltijd")
+            st.markdown("### ⏱ Geschatte Hersteltijd")
             st.info(
                 f"**Type sessie:** {training_type}\n\n**Advies:** {recovery_status} \n*Geschatte tijd tot volledig herstel: **ca. {recovery_hours} uur**.*")
 
