@@ -247,7 +247,8 @@ else:
             })
 
         # --- TABS MAKEN VOOR NAVIGATIE ---
-        tab_acwr, tab_nutrition = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel"])
+        # Pas je tabs-definitie aan zodat er een extra tab bij komt:
+        tab_acwr, tab_nutrition, tab_fridge = st.tabs(["📊 ACWR & Belasting", "🍎 Voeding & Herstel", "Test in progress (Persoonlijke chef)"])
 
         with tab_acwr:
             acwr = acute_load / chronic_load if chronic_load > 0 else 0
