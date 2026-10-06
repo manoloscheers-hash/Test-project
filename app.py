@@ -6,7 +6,7 @@ from stravalib import Client
 
 # 1. Pagina instellingen
 st.set_page_config(
-    page_title="Running & Nutrition Monitor",
+    page_title="Hardloop & Voedings Monitor",
     page_icon="🏃‍♂️",
     layout="centered",
     initial_sidebar_state="expanded"
@@ -29,7 +29,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("Running & Herstel Monitor")
+st.title("Hardloop & Herstel Monitor")
 st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je Strava-activiteiten.")
 
 st.sidebar.markdown("---")
