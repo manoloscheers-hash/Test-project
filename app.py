@@ -79,14 +79,17 @@ if not st.session_state.access_token:
 
 
 else:
-    # --- ZIJBALK VOOR INSTELLINGEN ---
-    st.sidebar.markdown("### ⚙️️ Profiel & Instellingen")
 
     st.sidebar.markdown("---")
     sport_filter = st.sidebar.selectbox(
         "🎯 Filter Activiteiten:",
         ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
     )
+
+    # --- ZIJBALK VOOR INSTELLINGEN ---
+    st.sidebar.markdown("### ⚙️️ Profiel & Instellingen")
+
+
 
     max_hr_input = st.sidebar.number_input("Maximale Hartslag (bpm)", min_value=120, max_value=220,
                                            value=st.session_state.max_hr)
