@@ -379,7 +379,7 @@ else:
             st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
     with tab_nutrition:
-        st.subheader("🍎 Voeding- & Hersteladvies")
+        st.subheader("🍎 Uitgebreid Voeding- & Hersteladvies")
         st.markdown(
             "Selecteer een training om een nauwkeurige herstelanalyse, gerichte macro's en een uitgebreide variatie aan maaltijdrecepten te bekijken."
         )
@@ -410,35 +410,37 @@ else:
             name_lower = selected_act['name'].lower()
             cals_per_min = cals / duration if duration > 0 else 10
 
-            # Genuanceerde herstelberekening
+            # ---------------------------------------------------------
+            # HIER START DE AANGEPASTE HERSTELBEREKENING
+            # ---------------------------------------------------------
             if any(k in name_lower for k in
-                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint", "kracht"]) or cals_per_min > 14:
-                training_type = "Zeer Intensief (Anaeroob / Interval / Zware Kracht)"
-                recovery_hours = 60 if duration > 60 else 48
-                recovery_status = "🔴 Hoge spierschade & glycogeenuitputting — Focus op eiwitten en complexe koolhydraten."
+                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or cals_per_min > 14:
+                training_type = "Intensieve Interval- of Temposessie"
+                recovery_hours = 36
+                recovery_status = "⚡ Explosieve belasting — Goed herstel van glycogeen en spieren aanbevolen."
                 meal_cat = "zwaar"
-            elif 450 <= cals or duration > 90 or cals_per_min > 11:
-                training_type = "Zware Duurtraining / Lange Duurloop (LSD)"
-                recovery_hours = 48
-                recovery_status = "🟠 Grote duurbelasting — Uitgebreid herstel van glycogeenvoorraden en vochtbalans nodig."
+            elif duration > 90 or cals > 700:
+                training_type = "Lange Duurloop (LSD)"
+                recovery_hours = 40
+                recovery_status = "🟠 Grote duurbelasting — Uitgebreid herstel van vocht en koolhydraten nodig."
                 meal_cat = "zwaar"
-            elif 250 <= cals or 45 <= duration <= 90:
-                training_type = "Gemiddelde Duur- of Temposessie"
-                recovery_hours = 30
-                recovery_status = "🟡 Matige belasting — Normaal hersteltempo, let op voldoende eiwitinname."
+            elif 450 <= cals <= 700 or 45 <= duration <= 90:
+                training_type = "Solide Duurtraining"
+                recovery_hours = 24
+                recovery_status = "🟢 Prima training! Je herstelt hier heel vlot van met goede voeding."
                 meal_cat = "middel"
-            elif 100 <= cals or 20 <= duration < 45:
-                training_type = "Lichte Duurloop / Herstelloop"
-                recovery_hours = 20
-                recovery_status = "🟢 Lichte opbouw, geen extreme maatregelen vereist."
+            elif 200 <= cals or 25 <= duration < 45:
+                training_type = "Lichte Duurloop / Vlot Rondje"
+                recovery_hours = 16
+                recovery_status = "🟢 Lekker soepel loopje — Je bent zo weer volledig hersteld!"
                 meal_cat = "licht"
             else:
-                training_type = "Kort Herstel / Mobiliteit"
+                training_type = "Kort Herstel / Uitlopen"
                 recovery_hours = 12
-                recovery_status = "🟢 Minimale belasting — Vrijwel direct hersteld."
+                recovery_status = "🟢 Minimale belasting — Vrijwel direct weer fris."
                 meal_cat = "licht"
 
-            st.markdown("### ⏱ Herstelanalyse")
+            st.markdown("### ⏱ Genuanceerde Herstelanalyse")
             st.info(
                 f"**Sectortype:** {training_type}\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
@@ -451,10 +453,9 @@ else:
             col_m2.metric("Eiwitten (Spierherstel)", f"ca. {protein_target} gram")
 
             st.markdown("---")
-            st.markdown("### 🍳 Mogelijke recepten")
+            st.markdown("### 🍳 Uitgebreide Receptendatabase")
 
-            # SLIMME RECEPTEN DATABASE (Hier kun je heel eenvoudig recepten aan toevoegen!)
-            # SLIMME RECEPTEN DATABASE (Netjes opgesplitst in lijsten voor ingrediënten en stappen)
+            # SLIMME RECEPTEN DATABASE
             recipe_database = {
                 "zwaar": [
                     {
@@ -628,7 +629,6 @@ else:
                         st.markdown(f"{s_idx}. {step}")
         else:
             st.warning("Geen activiteiten gevonden om voedingsadvies voor te genereren.")
-
     with tab_fridge:
         st.subheader("🧑‍🍳 Persoonlijke Chef — Kook op basis van je training & voorraad")
         st.markdown(
