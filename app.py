@@ -447,7 +447,7 @@ else:
             carbs_target = int(cals * 0.55 / 4)
             protein_target = int(st.session_state.body_weight * 0.35)
 
-            st.markdown("### 🎯 Benodigdheden voor (optimaal) herstel ")
+            st.markdown("### 🎯 Voor (optimaal) herstel ")
             col_m1, col_m2 = st.columns(2)
             col_m1.metric("Koolhydraten aanvullen", f"ca. {carbs_target} gram")
             col_m2.metric("Eiwitten (Spierherstel)", f"ca. {protein_target} gram")
