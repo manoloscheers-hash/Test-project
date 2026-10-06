@@ -321,7 +321,7 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        st.subheader("📊 Hoe zeldzaam of intensief belast jij jezelf?")
+        st.subheader("📊 Hoe intensief belast jij jezelf?")
         st.markdown(
             "Hier zie je in één oogopslag of je op een veilige manier opbouwt richting je doelen, of dat het risico op overbelasting toeneemt."
         )
