@@ -14,6 +14,52 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded"
 )
+st.markdown("""
+    <style>
+    /* 1. Algemene layout en rustige witruimte */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+
+    /* 2. Signatuur knoppen met subtiele hover-animatie */
+    div.stButton > button {
+        border-radius: 8px;
+        font-weight: 500;
+        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
+        transition: all 0.2s ease-in-out;
+    }
+
+    div.stButton > button:hover {
+        border-color: #FF334B;
+        color: #FF334B;
+        box-shadow: 0 2px 6px rgba(255, 51, 75, 0.15);
+    }
+
+    /* 3. Actieve tabbladen voorzien van een strak accent */
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        color: #FF334B !important;
+        border-bottom-color: #FF334B !important;
+    }
+
+    /* 4. Subtiele kaart-containers voor metingen en gerechten */
+    div[data-testid="stMetric"], div[data-testid="stVerticalBlock"] > div[style*="border-color"] {
+        border-radius: 10px;
+        padding: 12px;
+        background-color: #ffffff;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    /* 5. Sidebar een rustige, eigen achtergrondtint geven */
+    [data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #f1f5f9;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.markdown("""
     <style>
