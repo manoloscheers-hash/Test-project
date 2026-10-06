@@ -438,7 +438,7 @@ else:
                 recovery_status = "🟢 Minimale belasting — Vrijwel direct hersteld."
                 meal_cat = "licht"
 
-            st.markdown("### ⏱ Genuanceerde Herstelanalyse")
+            st.markdown("### ⏱ Herstelanalyse")
             st.info(
                 f"**Sectortype:** {training_type}\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
