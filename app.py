@@ -332,7 +332,7 @@ else:
         col2.metric("Langetermijn (Gemiddelde van 4 weken)", f"{round(chronic_load, 1)}",
                     help="Je fitheidsbasis: hoeveel belasting je lichaam de afgelopen maand gemiddeld gewend is te dragen.")
         col3.metric("Belastingsbalans (Ratio)", f"{round(acwr, 2)}",
-                    help="Verhouding tussen je recente belasting en je basisfitheid (Acute vs. Chronic Workload Ratio).")
+                    help="Verhouding tussen je recente belasting en je basisfitheid.")
 
         if acwr < 0.8:
             st.info(
