@@ -485,20 +485,10 @@ else:
                         """
 
                         # Converteer het bijgesneden Pillow Image object naar bytes voor de AI
-                        img_byte_arr = io.BytesIO()
-                        # Zorg dat de afbeelding correct wordt opgeslagen als JPEG/PNG
-                        img_format = cropped_img.format if cropped_img.format else 'JPEG'
-                        cropped_img.save(img_byte_arr, format=img_format)
-                        image_bytes = img_byte_arr.getvalue()
-
-                        prompt_contents = [
-                            {"mime_type": "image/jpeg", "data": image_bytes},
-                            prompt
-                        ]
-
+                        # Geef de bijgesneden afbeelding en de prompt direct als lijst mee aan het model
                         response = client.models.generate_content(
                             model='gemini-3.8-flash',
-                            contents=prompt_contents
+                            contents=[cropped_img, prompt]
                         )
 
                         st.markdown("---")
