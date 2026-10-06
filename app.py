@@ -337,11 +337,27 @@ else:
         else:
             st.error("🔴 **Hoog risico:** Grote kans op overbelasting! Doe rustig aan.")
 
-        st.subheader("📈 Wekelijkse Belasting")
-        fig = px.line(
-            chart_df, x="Datum", y="Trainingsbelasting", markers=True,
-            labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
-        )
+            # --- STUKJE CODE VOOR DE POPUP INFORMATIEKNOP ---
+            col_title, col_info = st.columns([6, 1])
+            with col_title:
+                st.subheader("📈 Wekelijkse Belasting")
+            with col_info:
+                with st.popover("ℹ️ Uitleg"):
+                    st.markdown("### Hoe wordt de belasting berekend?")
+                    st.markdown(
+                        "De trainingsbelasting combineert de **duur** en **intensiteit** van al je trainingen:\n\n"
+                        "- **Hartslagreserve:** Er wordt gekeken naar hoeveel tijd je boven je rusthartslag hebt getraind ten opzichte van je maximale hartslag.\n"
+                        "- **Weging per sport:** Fietsen en hardlopen hebben een eigen vermenigvuldigingsfactor voor de impact op je lichaam.\n"
+                        "- **Doel:** Dit helpt je om je Acute vs. Chronic workload (ACWR) in de gaten te houden zodat je niet overbelast raakt!"
+                    )
+
+            fig = px.line(
+                chart_df, x="Datum", y="Trainingsbelasting", markers=True,
+                labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
+            )
+            fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
+            st.plotly_chart(fig, use_container_width=True)
+
         fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
         st.plotly_chart(fig, use_container_width=True)
 
