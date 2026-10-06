@@ -367,7 +367,7 @@ else:
             st.warning("Geen activiteiten gevonden voor het geselecteerde sportfilter.")
 
     with tab_fridge:
-        st.subheader("📸 Koelkast Chef — Kook op basis van je training & voorraad")
+        st.subheader("🧑‍🍳 Persoonlijke Chef — Kook op basis van je training & voorraad")
         st.markdown(
             "De AI kijkt naar de training die je hebt geselecteerd in het voedingstabblad en bedenkt een recept dat exact past bij jouw herstelbehoefte van die dag!")
 
