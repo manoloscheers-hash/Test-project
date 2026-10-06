@@ -379,7 +379,7 @@ else:
             st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
     with tab_nutrition:
-        st.subheader("🍎 Uitgebreid Voeding- & Hersteladvies")
+        st.subheader("🍎 Voeding- & Hersteladvies")
         st.markdown(
             "Selecteer een training om een nauwkeurige herstelanalyse, gerichte macro's en een uitgebreide variatie aan maaltijdrecepten te bekijken."
         )
@@ -451,7 +451,7 @@ else:
             col_m2.metric("Eiwitten (Spierherstel)", f"ca. {protein_target} gram")
 
             st.markdown("---")
-            st.markdown("### 🍳 Uitgebreide Receptendatabase")
+            st.markdown("### 🍳 Mogelijke recepten")
 
             # SLIMME RECEPTEN DATABASE (Hier kun je heel eenvoudig recepten aan toevoegen!)
             recipe_database = {
