@@ -445,7 +445,7 @@ else:
 
             # Activeer de cropper
             cropped_img = st_cropper(
-                uploaded_image,
+                Image.open(uploaded_image),
                 realtime_update=True,
                 aspect_ratio=selected_aspect,
                 key="fridge_image_cropper"
