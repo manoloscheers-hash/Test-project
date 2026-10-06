@@ -424,22 +424,8 @@ else:
 
         if uploaded_image is not None:
             # Optionele beeldverhouding voor het bijsnijden
-            aspect_choice = st.radio(
-                "Kies een uitsnede (optioneel):",
-                ["Vrij", "1:1 (Vierkant)", "16:9 (Breedbeeld)", "4:3 (Standaard)"],
-                index=0,
-                horizontal=True,
-                key="aspect_radio_choice"
-            )
-
-            aspect_ratios = {
-                "Vrij": None,
-                "1:1 (Vierkant)": (1, 1),
-                "16:9 (Breedbeeld)": (16, 9),
-                "4:3 (Standaard)": (4, 3)
-            }
-
-            selected_aspect = aspect_ratios[aspect_choice]
+            # Vrije uitsnede zonder extra knoppen
+            selected_aspect = None
 
             st.info(
                 "✂️ Sleep en pas het kader hieronder aan om de foto bij te snijden op de ingrediënten die je wilt gebruiken.")
