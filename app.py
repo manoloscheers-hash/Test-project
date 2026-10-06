@@ -379,9 +379,10 @@ else:
             st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
     with tab_nutrition:
-        st.subheader("🍎 Voeding & Hersteladvies per Training")
+        st.subheader("🍎 Uitgebreid Voeding- & Hersteladvies")
         st.markdown(
-            "Selecteer hieronder een recente training om het calorieverbruik, de hersteltijd en gerichte maaltijdvoorbeelden te bekijken. Klik op een maaltijd om het volledige recept te bekijken!")
+            "Selecteer een training om een nauwkeurige herstelanalyse, gerichte macro's en een uitgebreide variatie aan maaltijdrecepten te bekijken."
+        )
 
         if filtered_activities_list:
             cutoff_7d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
@@ -389,13 +390,13 @@ else:
 
             if recent_acts:
                 activity_labels = [act["label"] for act in recent_acts]
-                chosen_label = st.selectbox("Kies een training (afgelopen 7 dagen):", activity_labels)
+                chosen_label = st.selectbox("Kies een training (afgelopen 7 dagen):", activity_labels,
+                                            key="nutrition_recent_select")
                 selected_act = next(act for act in recent_acts if act["label"] == chosen_label)
             else:
-                st.info(
-                    "Je hebt in de afgelopen 7 dagen geen activiteiten geregistreerd met dit filter. Hier is je meest recente training:")
+                st.info("Geen activiteiten in de afgelopen 7 dagen. Hier is je meest recente training:")
                 activity_labels = [act["label"] for act in filtered_activities_list[:5]]
-                chosen_label = st.selectbox("Kies een training:", activity_labels)
+                chosen_label = st.selectbox("Kies een training:", activity_labels, key="nutrition_older_select")
                 selected_act = next(act for act in filtered_activities_list if act["label"] == chosen_label)
 
             st.markdown("---")
@@ -409,152 +410,135 @@ else:
             name_lower = selected_act['name'].lower()
             cals_per_min = cals / duration if duration > 0 else 10
 
+            # Genuanceerde herstelberekening
             if any(k in name_lower for k in
-                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or cals_per_min > 13:
-                training_type = "Intensief (Interval / Tempo)"
+                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint", "kracht"]) or cals_per_min > 14:
+                training_type = "Zeer Intensief (Anaeroob / Interval / Zware Kracht)"
+                recovery_hours = 60 if duration > 60 else 48
+                recovery_status = "🔴 Hoge spierschade & glycogeenuitputting — Focus op eiwitten en complexe koolhydraten."
+                meal_cat = "zwaar"
+            elif 450 <= cals or duration > 90 or cals_per_min > 11:
+                training_type = "Zware Duurtraining / Lange Duurloop (LSD)"
                 recovery_hours = 48
-                recovery_status = "🔴 Zware belasting — Volledig glycogeenherstel en spierherstel vereist."
-            elif selected_act['distance'] > 15 or duration > 75:
-                training_type = "Lange Duurloop (LSD)"
-                recovery_hours = 36
-                recovery_status = "🟠 Grote duurbelasting — Focus op vocht, zouten en langzame koolhydraten."
+                recovery_status = "🟠 Grote duurbelasting — Uitgebreid herstel van glycogeenvoorraden en vochtbalans nodig."
+                meal_cat = "zwaar"
+            elif 250 <= cals or 45 <= duration <= 90:
+                training_type = "Gemiddelde Duur- of Temposessie"
+                recovery_hours = 30
+                recovery_status = "🟡 Matige belasting — Normaal hersteltempo, let op voldoende eiwitinname."
+                meal_cat = "middel"
+            elif 100 <= cals or 20 <= duration < 45:
+                training_type = "Lichte Duurloop / Herstelloop"
+                recovery_hours = 20
+                recovery_status = "🟢 Lichte opbouw, geen extreme maatregelen vereist."
+                meal_cat = "licht"
             else:
-                training_type = "Herstel / Rustige Duurloop"
-                recovery_hours = 24
-                recovery_status = "🟢 Lichte belasting — Snelle en eenvoudige hersteltijd."
+                training_type = "Kort Herstel / Mobiliteit"
+                recovery_hours = 12
+                recovery_status = "🟢 Minimale belasting — Vrijwel direct hersteld."
+                meal_cat = "licht"
 
-            st.markdown("### ⏱ Geschatte Hersteltijd")
+            st.markdown("### ⏱ Genuanceerde Herstelanalyse")
             st.info(
-                f"**Type sessie:** {training_type}\n\n**Advies:** {recovery_status} \n*Geschatte tijd tot volledig herstel: **ca. {recovery_hours} uur**.*")
+                f"**Sectortype:** {training_type}\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
-            carbs_target = int(cals * 0.6 / 4)
-            protein_target = int(st.session_state.body_weight * 0.3)
+            carbs_target = int(cals * 0.55 / 4)
+            protein_target = int(st.session_state.body_weight * 0.35)
 
-            st.markdown("### 🎯 Hersteldoel voor deze sessie")
-            st.markdown(f"- **Koolhydraten aanvullen:** ca. **{carbs_target} gram**")
-            st.markdown(f"- **Eiwitten voor spierherstel:** ca. **{protein_target} gram**")
+            st.markdown("### 🎯 Doelstellingen voor deze sessie")
+            col_m1, col_m2 = st.columns(2)
+            col_m1.metric("Koolhydraten aanvullen", f"ca. {carbs_target} gram")
+            col_m2.metric("Eiwitten (Spierherstel)", f"ca. {protein_target} gram")
 
             st.markdown("---")
-            st.markdown("### 🍳 Klik op een maaltijd voor het volledige recept:")
+            st.markdown("### 🍳 Uitgebreide Receptendatabase")
 
-            act_hash = hash(str(selected_act['id'])) % 3
+            # SLIMME RECEPTEN DATABASE (Hier kun je heel eenvoudig recepten aan toevoegen!)
+            recipe_database = {
+                "zwaar": [
+                    {
+                        "title": "Power Haver-Kwark Bowl met Rood Fruit",
+                        "kcal": 550, "carbs": 70, "protein": 35,
+                        "ingredients": "70g havermout, 200g magere kwark, 1 banaan, handje blauwe bessen, 1 el chiazaad, scheutje honing.",
+                        "steps": "1. Meng de havermout met de kwark en een scheutje water of melk.\n2. Snijd de banaan in plakjes en verdeel samen met het rode fruit, chiazaad en de honing over de bowl."
+                    },
+                    {
+                        "title": "Volkoren Wrap met Tonijn, Avocado & Bonen",
+                        "kcal": 650, "carbs": 60, "protein": 40,
+                        "ingredients": "2 volkoren wraps, 1 blikje tonijn (op water), 1/2 avocado, 50g kidneybonen, sla, komkommer, yoghurt-knoflookdressing.",
+                        "steps": "1. Prak de avocado en meng met de uitgelekte tonijn en kidneybonen.\n2. Leg sla op de wraps, verdeel het tonijnmengsel erover, voeg komkommer toe en rol strak op."
+                    },
+                    {
+                        "title": "Gezonde Pasta Bolognese met Rundergehakt & Champignons",
+                        "kcal": 750, "carbs": 85, "protein": 45,
+                        "ingredients": "90g volkoren spaghetti, 130g mager rundergehakt, 150g champignons, 1 ui, 2 knoflookteentjes, 200ml passata, Italiaanse kruiden.",
+                        "steps": "1. Kook de pasta volgens aanwijzing.\n2. Fruit ui en knoflook, bak het gehakt rul en bak de champignons mee.\n3. Voeg de passata en kruiden toe, laat pruttelen en serveer over de pasta."
+                    },
+                    {
+                        "title": "Rijstwafels met Pindakaas & Banaan",
+                        "kcal": 300, "carbs": 35, "protein": 10,
+                        "ingredients": "4 rijstwafels, 2 el 100% pindakaas, 1 banaan in plakjes, snufje kaneel.",
+                        "steps": "1. Besmeer de rijstwafels rijkelijk met pindakaas.\n2. Leg de plakjes banaan erop en maak af met een snufje kaneel."
+                    }
+                ],
+                "middel": [
+                    {
+                        "title": "Proteïne Yoghurt met Cruesli & Appel",
+                        "kcal": 420, "carbs": 50, "protein": 30,
+                        "ingredients": "250ml Griekse yoghurt 0% of Skyr, 40g volkoren granen/cruesli, 1 appel in stukjes, snuf kaneel.",
+                        "steps": "1. Schep de Skyr in een kom.\n2. Voeg de knapperige granen toe, garneer met appeltjes en bestrooi met kaneel."
+                    },
+                    {
+                        "title": "Omelet Wrap met Kipfilet en Spinazie",
+                        "kcal": 480, "carbs": 35, "protein": 38,
+                        "ingredients": "2 eieren, scheutje melk, handje verse spinazie, 70g kipfilet plakjes, 1 volkoren boterham of wrap.",
+                        "steps": "1. Klop de eieren los en bak een dunne omelet in de pan met wat spinazie erdoor.\n2. Leg dit op de wrap of serveer naast de volkoren boterham met kipfilet."
+                    },
+                    {
+                        "title": "Wokschotel met Kip, Noedels & Oosterse Groenten",
+                        "kcal": 580, "carbs": 65, "protein": 35,
+                        "ingredients": "75g volkoren noedels of mie, 120g kipfilet reepjes, 200g wokgroenten, 2 el sojasaus, gemberpoeder, 1 tl sesamolie.",
+                        "steps": "1. Kook de noedels.\n2. Bak de kip in de wok, voeg de groenten toe.\n3. Voeg de noedels, sojasaus en sesamolie toe en wok nog 2 minuten goed door."
+                    }
+                ],
+                "licht": [
+                    {
+                        "title": "Lichte Smoothie van Rood Fruit & Kwark",
+                        "kcal": 300, "carbs": 40, "protein": 22,
+                        "ingredients": "150g diepvries rood fruit, 150ml magere kwark, 100ml water of amandelmelk.",
+                        "steps": "1. Blend alle ingrediënten in een blender tot een gladde, frisse smoothie."
+                    },
+                    {
+                        "title": "Volkoren Boterhammen met Hüttenkäse & Komkommer",
+                        "kcal": 350, "carbs": 35, "protein": 25,
+                        "ingredients": "3 volkoren boterhammen, 100g hüttenkäse, halve komkommer in plakjes, peper en zout.",
+                        "steps": "1. Besmeer de sneetjes brood met een royale laag hüttenkäse.\n2. Beleg met plakjes komkommer en breng op smaak met peper en zout."
+                    },
+                    {
+                        "title": "Frisse Salade met Quinoa, Feta & Kikkererwten",
+                        "kcal": 450, "carbs": 50, "protein": 20,
+                        "ingredients": "65g gekookte quinoa, 100g kikkererwten, 40g feta (light), cherrytomaatjes, komkommer, dressing van olijfolie en citroensap.",
+                        "steps": "1. Meng de gekookte quinoa met uitgespoelde kikkererwten en verse groenten.\n2. Verkruimel de feta erboven en besprenkel met de dressing."
+                    }
+                ]
+            }
 
-            if training_type == "Intensief (Interval / Tempo)":
-                c_m1 = int(cals * 0.35)
-                c_m2 = int(cals * 0.65)
+            # Automatisch de recepten inladen op basis van de categorie
+            available_recipes = recipe_database.get(meal_cat, recipe_database["middel"])
 
-                if act_hash == 0:
-                    with st.expander(f"🍽️ Maaltijd 1: Witte Rijst met Kipfilet & Zoete Saus (ca. {c_m1} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.70 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
-
-                        **Ingrediënten:**
-                        * 75-90g witte rijst (snelle koolhydraten voor directe opname)
-                        * 120g kipfilet
-                        * Handje roerbakgroenten (paprika, courgette)
-                        * 2 el zoetzure saus of ketjap manis
-
-                        **Bereidingswijze:**
-                        1. Kook de witte rijst volgens de aanwijzingen op de verpakking.
-                        2. Snijd de kipfilet in blokjes en bak deze gaar in een pan met een beetje olijfolie.
-                        3. Roerbak de groenten kort mee tot ze beetgaar zijn.
-                        4. Voeg de zoetzure saus toe en meng alles samen met de rijst. Eet smakelijk!
-                        """)
-
-                    with st.expander(f"🍽️ Maaltijd 2: Hartige Power Wraps (ca. {c_m2} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
-
-                        **Ingrediënten:**
-                        * 2 volkoren tortilla wraps
-                        * 150g mager rundergehakt of vega-gehakt
-                        * 1 blikje kidneybonen (afgespoeld)
-                        * Tomatenpurree, mais en Mexicaanse kruiden
-
-                        **Bereidingswijze:**
-                        1. Rul het gehakt in een koekenpan en voeg de Mexicaanse kruiden toe.
-                        2. Voeg de kidneybonen en mais toe en warm kort door.
-                        3. Besmeer de wraps met een dun laagje tomatenpurree en schep het gehakt-bonenmengsel erop.
-                        4. Rol de wraps strak op en serveer eventueel met een frisse salade.
-                        """)
-                elif act_hash == 1:
-                    with st.expander(f"🍽️ Maaltijd 1: Herstel-Smoothiekom met Granola (ca. {c_m1} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
-
-                        **Ingrediënten:**
-                        * 2 bevroren bananen
-                        * 200 ml magere kwark of (plant-based) yoghurt
-                        * Schepje eiwitpoeder (optioneel)
-                        * Handje granola en rood fruit voor de topping
-
-                        **Bereidingswijze:**
-                        1. Blend de bevroren bananen samen met de kwark en het eiwitpoeder tot een dikke, egale massa.
-                        2. Giet de smoothie in een mooie kom.
-                        3. Maak het af met een royale hand granola en vers rood fruit.
-                        """)
-
-                    with st.expander(f"🍽️ Maaltijd 2: Volkoren Spaghetti Bolognese (ca. {c_m2} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
-
-                        **Ingrediënten:**
-                        * 90g volkoren spaghetti
-                        * 125g mager rundergehakt
-                        * Gezeefde tomaten (passata) + Italiaanse kruiden
-                        * Ui, knoflook en champignons
-
-                        **Bereidingswijze:**
-                        1. Kook de volkoren spaghetti al dente.
-                        2. Snipper de ui, pers de knoflook en snijd de champignons; bak deze samen met het gehakt aan.
-                        3. Giet de gezeefde tomaten en kruiden erbij en laat de saus zachtjes inkoken.
-                        4. Serveer de saus over de pasta.
-                        """)
-                else:
-                    with st.expander(f"🍽️ Maaltijd 1: Banaan-Haver Pannenkoeken (ca. {c_m1} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
-
-                        **Ingrediënten:**
-                        * 1 rijpe banaan
-                        * 60g havermout
-                        * 1 ei + scheutje melk
-                        * Snufje kaneel
-
-                        **Bereidingswijze:**
-                        1. Prak de banaan fijn in een kom en roer het ei en de melk erdoor.
-                        2. Voeg de havermout en kaneel toe en mix tot een beslag.
-                        3. Bak kleine pannenkoekjes in een pan met een beetje boter of olie tot ze goudbruin zijn.
-                        """)
-
-                    with st.expander(f"🍽️ Maaltijd 2: Noedels met Kip & Groenten (ca. {c_m2} kcal)"):
-                        st.markdown(f"""
-                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
-
-                        **Ingrediënten:**
-                        * 80g mie/noedels
-                        * 125g kipfilet reepjes
-                        * Wokgroenten (o.a. paksoi, taugé, wortel)
-                        * 2 el sojasaus, beetje gember en sesamolie
-
-                        **Bereidingswijze:**
-                        1. Kook de noedels volgens de aanwijzingen.
-                        2. Bak de kipfilet in een wokpan en voeg de wokgroenten toe.
-                        3. Voeg de noedels toe aan de pan samen met de sojasaus en gember. Goed omscheppen en serveren!
-                        """)
-            else:
-                with st.expander("🍽️ Herstel- en Duurloopmaaltijd (Bekijk recept)"):
+            for idx, recipe in enumerate(available_recipes):
+                with st.expander(f"🍽️ {recipe['title']} (ca. {recipe['kcal']} kcal)"):
                     st.markdown(f"""
-                    * **Energie:** ca. **{cals} kcal** — Licht verteerbare maaltijd voor rustig herstel.
+                    * **Energie:** ca. **{recipe['kcal']} kcal** | Koolhydraten: ~{recipe['carbs']}g | Eiwitten: ~{recipe['protein']}g
 
                     **Ingrediënten:**
-                    * Volkoren boterhammen met kipfilet / pindakaas of een frisse quinoa-salade met feta en komkommer.
+                    * {recipe['ingredients']}
 
                     **Bereidingswijze:**
-                    1. Houd het qua voeding na een rustige loop lekker simpel. Zorg voor voldoende vochtinname en een goede balans van trage koolhydraten en eiwitten om je spieren te laten herstellen zonder je spijsvertering te overbelasten.
+                    {recipe['steps']}
                     """)
         else:
-            st.warning("Geen activiteiten gevonden voor het geselecteerde sportfilter.")
+            st.warning("Geen activiteiten gevonden om voedingsadvies voor te genereren.")
 
     with tab_fridge:
         st.subheader("🧑‍🍳 Persoonlijke Chef — Kook op basis van je training & voorraad")
