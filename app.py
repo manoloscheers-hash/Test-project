@@ -388,7 +388,7 @@ else:
     with tab_nutrition:
         st.subheader("🍎 Voeding & Hersteladvies per Training")
         st.markdown(
-            "Selecteer hieronder een recente training om het calorieverbruik, de hersteltijd en gerichte maaltijdvoorbeelden te bekijken.")
+            "Selecteer hieronder een recente training om het calorieverbruik, de hersteltijd en gerichte maaltijdvoorbeelden te bekijken. Klik op een maaltijd om het volledige recept te bekijken!")
 
         if filtered_activities_list:
             cutoff_7d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
@@ -442,7 +442,7 @@ else:
             st.markdown(f"- **Eiwitten voor spierherstel:** ca. **{protein_target} gram**")
 
             st.markdown("---")
-            st.markdown("### 🍳 Intensiteits-specifieke Voorbeeldmaaltijden")
+            st.markdown("### 🍳 Klik op een maaltijd voor het volledige recept:")
 
             act_hash = hash(str(selected_act['id'])) % 3
 
@@ -451,31 +451,115 @@ else:
                 c_m2 = int(cals * 0.65)
 
                 if act_hash == 0:
-                    st.markdown(f"""
-                    *Intensieve sessie ({cals} kcal) — Variatie A (Snel & Koolhydrietenrijk)*
-                    **1. Witte Rijst met Kipfilet & Zoete Saus**
-                    * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.70 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
-                    * **2. Hartige Power Wraps**
-                    * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
-                    """)
+                    with st.expander(f"🍽️ Maaltijd 1: Witte Rijst met Kipfilet & Zoete Saus (ca. {c_m1} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.70 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
+
+                        **Ingrediënten:**
+                        * 75-90g witte rijst (snelle koolhydraten voor directe opname)
+                        * 120g kipfilet
+                        * Handje roerbakgroenten (paprika, courgette)
+                        * 2 el zoetzure saus of ketjap manis
+
+                        **Bereidingswijze:**
+                        1. Kook de witte rijst volgens de aanwijzingen op de verpakking.
+                        2. Snijd de kipfilet in blokjes en bak deze gaar in een pan met een beetje olijfolie.
+                        3. Roerbak de groenten kort mee tot ze beetgaar zijn.
+                        4. Voeg de zoetzure saus toe en meng alles samen met de rijst. Eet smakelijk!
+                        """)
+
+                    with st.expander(f"🍽️ Maaltijd 2: Hartige Power Wraps (ca. {c_m2} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
+
+                        **Ingrediënten:**
+                        * 2 volkoren tortilla wraps
+                        * 150g mager rundergehakt of vega-gehakt
+                        * 1 blikje kidneybonen (afgespoeld)
+                        * Tomatenpurree, mais en Mexicaanse kruiden
+
+                        **Bereidingswijze:**
+                        1. Rul het gehakt in een koekenpan en voeg de Mexicaanse kruiden toe.
+                        2. Voeg de kidneybonen en mais toe en warm kort door.
+                        3. Besmeer de wraps met een dun laagje tomatenpurree en schep het gehakt-bonenmengsel erop.
+                        4. Rol de wraps strak op en serveer eventueel met een frisse salade.
+                        """)
                 elif act_hash == 1:
-                    st.markdown(f"""
-                    *Intensieve sessie ({cals} kcal) — Variatie B (Smoothie & Pasta)*
-                    **1. Herstel-Smoothiekom met Granola**
-                    * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
-                    **2. Volkoren Spaghetti Bolognese**
-                    * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
-                    """)
+                    with st.expander(f"🍽️ Maaltijd 1: Herstel-Smoothiekom met Granola (ca. {c_m1} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
+
+                        **Ingrediënten:**
+                        * 2 bevroren bananen
+                        * 200 ml magere kwark of (plant-based) yoghurt
+                        * Schepje eiwitpoeder (optioneel)
+                        * Handje granola en rood fruit voor de topping
+
+                        **Bereidingswijze:**
+                        1. Blend de bevroren bananen samen met de kwark en het eiwitpoeder tot een dikke, egale massa.
+                        2. Giet de smoothie in een mooie kom.
+                        3. Maak het af met een royale hand granola en vers rood fruit.
+                        """)
+
+                    with st.expander(f"🍽️ Maaltijd 2: Volkoren Spaghetti Bolognese (ca. {c_m2} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
+
+                        **Ingrediënten:**
+                        * 90g volkoren spaghetti
+                        * 125g mager rundergehakt
+                        * Gezeefde tomaten (passata) + Italiaanse kruiden
+                        * Ui, knoflook en champignons
+
+                        **Bereidingswijze:**
+                        1. Kook de volkoren spaghetti al dente.
+                        2. Snipper de ui, pers de knoflook en snijd de champignons; bak deze samen met het gehakt aan.
+                        3. Giet de gezeefde tomaten en kruiden erbij en laat de saus zachtjes inkoken.
+                        4. Serveer de saus over de pasta.
+                        """)
                 else:
-                    st.markdown(f"""
-                    *Intensieve sessie ({cals} kcal) — Variatie C (Pannenkoeken & Noedels)*
-                    **1. Banaan-Haver Pannenkoeken**
-                    * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
-                    **2. Noedels met Tofu/Kip & Groenten**
-                    * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
-                    """)
+                    with st.expander(f"🍽️ Maaltijd 1: Banaan-Haver Pannenkoeken (ca. {c_m1} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
+
+                        **Ingrediënten:**
+                        * 1 rijpe banaan
+                        * 60g havermout
+                        * 1 ei + scheutje melk
+                        * Snufje kaneel
+
+                        **Bereidingswijze:**
+                        1. Prak de banaan fijn in een kom en roer het ei en de melk erdoor.
+                        2. Voeg de havermout en kaneel toe en mix tot een beslag.
+                        3. Bak kleine pannenkoekjes in een pan met een beetje boter of olie tot ze goudbruin zijn.
+                        """)
+
+                    with st.expander(f"🍽️ Maaltijd 2: Noedels met Kip & Groenten (ca. {c_m2} kcal)"):
+                        st.markdown(f"""
+                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
+
+                        **Ingrediënten:**
+                        * 80g mie/noedels
+                        * 125g kipfilet reepjes
+                        * Wokgroenten (o.a. paksoi, taugé, wortel)
+                        * 2 el sojasaus, beetje gember en sesamolie
+
+                        **Bereidingswijze:**
+                        1. Kook de noedels volgens de aanwijzingen.
+                        2. Bak de kipfilet in een wokpan en voeg de wokgroenten toe.
+                        3. Voeg de noedels toe aan de pan samen met de sojasaus en gember. Goed omscheppen en serveren!
+                        """)
             else:
-                st.markdown(f"*Herstelloop / Duurloop ({cals} kcal)* — Standaard herstelvoeding actief.")
+                with st.expander("🍽️ Herstel- en Duurloopmaaltijd (Bekijk recept)"):
+                    st.markdown(f"""
+                    * **Energie:** ca. **{cals} kcal** — Licht verteerbare maaltijd voor rustig herstel.
+
+                    **Ingrediënten:**
+                    * Volkoren boterhammen met kipfilet / pindakaas of een frisse quinoa-salade met feta en komkommer.
+
+                    **Bereidingswijze:**
+                    1. Houd het qua voeding na een rustige loop lekker simpel. Zorg voor voldoende vochtinname en een goede balans van trage koolhydraten en eiwitten om je spieren te laten herstellen zonder je spijsvertering te overbelasten.
+                    """)
         else:
             st.warning("Geen activiteiten gevonden voor het geselecteerde sportfilter.")
 
