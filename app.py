@@ -77,9 +77,16 @@ if not st.session_state.access_token:
 
     st.link_button("🔗 Inloggen met Strava", authorize_url, use_container_width=True)
 
+
 else:
     # --- ZIJBALK VOOR INSTELLINGEN ---
     st.sidebar.markdown("### ⚙️️ Profiel & Instellingen")
+
+    st.sidebar.markdown("---")
+    sport_filter = st.sidebar.selectbox(
+        "🎯 Filter Activiteiten:",
+        ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
+    )
 
     max_hr_input = st.sidebar.number_input("Maximale Hartslag (bpm)", min_value=120, max_value=220,
                                            value=st.session_state.max_hr)
@@ -112,11 +119,7 @@ else:
         st.session_state.refresh_token = None
         st.rerun()
 
-    st.sidebar.markdown("---")
-    sport_filter = st.sidebar.selectbox(
-        "🎯 Filter Activiteiten:",
-        ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
-    )
+
 
     # --- DATA OPHALEN & BEREKENEN ---
     try:
