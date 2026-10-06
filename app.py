@@ -473,7 +473,7 @@ else:
                         # Converteer het bijgesneden Pillow Image object naar bytes voor de AI
                         # Geef de bijgesneden afbeelding en de prompt direct als lijst mee aan het model
                         response = client.models.generate_content(
-                            model='gemini-3.8-flash',
+                            model='gemini-2.5-flash',
                             contents=[cropped_img, prompt]
                         )
 
