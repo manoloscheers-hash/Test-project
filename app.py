@@ -321,20 +321,31 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        st.subheader("📊 Belasting Overzicht")
+        st.subheader("📊 Hoe zeldzaam of intensief belast jij jezelf?")
+        st.markdown(
+            "Hier zie je in één oogopslag of je op een veilige manier opbouwt richting je doelen, of dat het risico op overbelasting toeneemt."
+        )
+
         col1, col2, col3 = st.columns(3)
-        col1.metric("Acute (7d)", f"{round(acute_load, 1)}")
-        col2.metric("Chronic (4w)", f"{round(chronic_load, 1)}")
-        col3.metric("Ratio", f"{round(acwr, 2)}")
+        col1.metric("Korte termijn (Afgelopen 7 dagen)", f"{round(acute_load, 1)}",
+                    help="De totale trainingsbelasting die je de afgelopen week hebt verwerkt.")
+        col2.metric("Langetermijn (Gemiddelde van 4 weken)", f"{round(chronic_load, 1)}",
+                    help="Je fitheidsbasis: hoeveel belasting je lichaam de afgelopen maand gemiddeld gewend is te dragen.")
+        col3.metric("Belastingsbalans (Ratio)", f"{round(acwr, 2)}",
+                    help="Verhouding tussen je recente belasting en je basisfitheid (Acute vs. Chronic Workload Ratio).")
 
         if acwr < 0.8:
-            st.info("⚠️ **Ondertraining:** Je belasting is vrij laag vergeleken met je baseline.")
+            st.info(
+                "⚠️ **Ondertraining:** Je belasting is vrij laag vergeleken met je baseline. Je kunt de trainingen geleidelijk weer opschroeven.")
         elif 0.8 <= acwr <= 1.3:
-            st.success("🟢 **Optimaal:** Veilige opbouw, perfect voor progressie!")
+            st.success(
+                "🟢 **Optimaal:** Veilige opbouw, perfect voor progressie! Je zit in de 'sweet spot' om fitter te worden.")
         elif 1.3 < acwr <= 1.5:
-            st.warning("🟠 **Let op:** Snelle piek in belasting. Bouw voldoende rust in.")
+            st.warning(
+                "🟠 **Let op:** Snelle piek in belasting vergeleken met je basis. Bouw tijdelijk wat extra rust in.")
         else:
-            st.error("🔴 **Hoog risico:** Grote kans op overbelasting! Doe rustig aan.")
+            st.error(
+                "🔴 **Hoog risico:** Grote kans op overbelasting! Je vraagt opeens veel meer van je lichaam dan het gewend is.")
 
         # Koptekst + Info knop naast elkaar
         col_title, col_info = st.columns([6, 1])
@@ -349,6 +360,18 @@ else:
                     "- **Weging per sport:** Fietsen en hardlopen hebben een eigen vermenigvuldigingsfactor voor de impact op je lichaam.\n"
                     "- **Doel:** Dit helpt je om je Acute vs. Chronic workload (ACWR) in de gaten te houden zodat je niet overbelast raakt!"
                 )
+
+        fig = px.line(
+            chart_df, x="Datum", y="Trainingsbelasting", markers=True,
+            labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
+        )
+        fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
+        st.plotly_chart(fig, use_container_width=True)
+
+        if weekly_details:
+            st.subheader("📋 Historie per week")
+            df_details = pd.DataFrame(weekly_details)
+            st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
         fig = px.line(
             chart_df, x="Datum", y="Trainingsbelasting", markers=True,
