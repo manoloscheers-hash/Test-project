@@ -32,6 +32,12 @@ st.markdown("""
 st.title("Running & Herstel Monitor")
 st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je Strava-activiteiten.")
 
+st.sidebar.markdown("---")
+sport_filter = st.sidebar.selectbox(
+    "🎯 Filter Activiteiten:",
+    ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
+)
+
 # Vaste Client ID en Secret
 DEFAULT_CLIENT_ID = 284865
 DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
@@ -180,7 +186,19 @@ else:
                         "distance": round(dist_km, 2),
                         "time_mins": round(moving_time_mins, 1),
                         "calories": round(estimated_cals, 0)
+
                     })
+
+                    # --- STAP 3: PAS HET SPORTFILTER TOE ---
+                    if sport_filter == "Hardloop activiteiten":
+                        filtered_activities_list = [act for act in detailed_activities_list if
+                                                    act["type"] == "Hardlopen"]
+                    elif sport_filter == "Fiets activiteiten":
+                        filtered_activities_list = [act for act in detailed_activities_list if act["type"] == "Fietsen"]
+                    else:
+                        filtered_activities_list = detailed_activities_list
+
+
 
                     act_monday = (act_date - datetime.timedelta(days=act_date.weekday())).date()
                     if act_monday in raw_weeks:
@@ -190,6 +208,7 @@ else:
                         raw_weeks[act_monday]["load"] += training_load
                         raw_weeks[act_monday]["times"] += moving_time_mins
                         raw_weeks[act_monday]["cals"] += estimated_cals
+
 
         sorted_dates = sorted(raw_weeks.keys())
         weekly_loads = [round(raw_weeks[m]["load"], 1) for m in sorted_dates]
