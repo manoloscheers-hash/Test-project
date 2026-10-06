@@ -29,7 +29,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏃‍♂️ Running & Herstel Monitor")
+st.title("Running & Herstel Monitor")
 st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je Strava-activiteiten.")
 
 # Vaste Client ID en Secret
