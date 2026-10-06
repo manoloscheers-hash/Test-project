@@ -8,7 +8,6 @@ from PIL import Image
 
 # 1. Pagina instellingen
 st.set_page_config(
-
     page_title="Hardloop & Voedings Monitor",
     page_icon="🏃‍♂️",
     layout="centered",
@@ -196,7 +195,7 @@ else:
         now = datetime.datetime.now(datetime.timezone.utc)
         start_date = now - datetime.timedelta(weeks=aantal_weken)
 
-        with st.spinner("Je Strava-activiteiten ophalen... 🏃‍♂️️🚴‍♂️"):
+        with st.spinner("Je Strava-activiteiten ophalen... 🏃‍♂🚴‍♂️"):
             activities = list(client.get_activities(after=start_date))
 
         weeks_list = []
@@ -256,19 +255,13 @@ else:
                         "name": act_name,
                         "distance": round(dist_km, 2),
                         "time_mins": round(moving_time_mins, 1),
-                        "calories": round(estimated_cals, 0)
+                        "calories": round(estimated_cals, 0),
+                        "avg_hr": avg_hr,
+                        "load": training_load,
+                        "start_monday": (act_date - datetime.timedelta(days=act_date.weekday())).date()
                     })
 
-                    act_monday = (act_date - datetime.timedelta(days=act_date.weekday())).date()
-                    if act_monday in raw_weeks:
-                        if avg_hr > 0:
-                            raw_weeks[act_monday]["hrs"].append(avg_hr)
-                        raw_weeks[act_monday]["dist"] += dist_km
-                        raw_weeks[act_monday]["load"] += training_load
-                        raw_weeks[act_monday]["times"] += moving_time_mins
-                        raw_weeks[act_monday]["cals"] += estimated_cals
-
-        # --- STAP 3: PAS HET SPORTFILTER TOE (HIER BUITEN DE LUS) ---
+        # --- STAP 3: PAS HET SPORTFILTER TOE VOORAF ---
         if sport_filter == "Hardloop activiteiten":
             filtered_activities_list = [act for act in detailed_activities_list if act["type"] == "Hardlopen"]
         elif sport_filter == "Fiets activiteiten":
@@ -276,8 +269,20 @@ else:
         else:
             filtered_activities_list = detailed_activities_list
 
-        sorted_dates = sorted(raw_weeks.keys())
-        weekly_loads = [round(raw_weeks[m]["load"], 1) for m in sorted_dates]
+        # Bereken wekelijkse historie op basis van de GEFILTERDE activiteitenlijst
+        filtered_raw_weeks = {m_date: {"dist": 0.0, "load": 0.0, "hrs": [], "times": 0.0, "cals": 0.0} for m_date in weeks_list}
+        for act in filtered_activities_list:
+            act_monday = act["start_monday"]
+            if act_monday in filtered_raw_weeks:
+                if act["avg_hr"] > 0:
+                    filtered_raw_weeks[act_monday]["hrs"].append(act["avg_hr"])
+                filtered_raw_weeks[act_monday]["dist"] += act["distance"]
+                filtered_raw_weeks[act_monday]["load"] += act["load"]
+                filtered_raw_weeks[act_monday]["times"] += act["time_mins"]
+                filtered_raw_weeks[act_monday]["cals"] += act["calories"]
+
+        sorted_dates = sorted(filtered_raw_weeks.keys())
+        weekly_loads = [round(filtered_raw_weeks[m]["load"], 1) for m in sorted_dates]
 
         cutoff_acute = now - datetime.timedelta(days=7)
         acute_load = sum([a["load"] for a in parsed_activities if a["datetime"] >= cutoff_acute])
@@ -293,7 +298,7 @@ else:
 
         weekly_details = []
         for m in sorted_dates:
-            d = raw_weeks[m]
+            d = filtered_raw_weeks[m]
             avg_h = sum(d["hrs"]) / len(d["hrs"]) if d["hrs"] else 0.0
             weekly_details.append({
                 "Week Start": m.strftime("%d %b"),
@@ -390,7 +395,7 @@ else:
                 recovery_hours = 24
                 recovery_status = "🟢 Lichte belasting — Snelle en eenvoudige hersteltijd."
 
-            st.markdown("### ⏱️ Geschatte Hersteltijd")
+            st.markdown("### ⏱️️ Geschatte Hersteltijd")
             st.info(
                 f"**Type sessie:** {training_type}\n\n**Advies:** {recovery_status} \n*Geschatte tijd tot volledig herstel: **ca. {recovery_hours} uur**.*")
 
@@ -444,7 +449,6 @@ else:
         st.markdown(
             "De AI kijkt naar de training die je hebt geselecteerd in het voedingstabblad en bedenkt een recept dat exact past bij jouw herstelbehoefte van die dag!")
 
-        # Controleer of er een geselecteerde training of gefilterde lijst beschikbaar is
         if 'selected_act' in locals() and selected_act:
             train_name = selected_act['name']
             train_type_str = selected_act['type']
@@ -477,7 +481,6 @@ else:
 
         st.markdown("---")
 
-        # Keuze voor invoermethode: Bestand uploaden of direct camera gebruiken
         input_methode = st.radio(
             "Kies invoermethode voor je foto:",
             ["Bestand / Fotobibliotheek uploaden", "Direct foto maken met camera"],
@@ -494,14 +497,11 @@ else:
             uploaded_image = st.camera_input("Maak een foto van je koelkast / ingrediënten:", key="fridge_camera_input")
 
         if uploaded_image is not None:
-            # Optionele beeldverhouding voor het bijsnijden
-            # Vrije uitsnede zonder extra knoppen
             selected_aspect = None
 
             st.info(
                 "✂️ Sleep en pas het kader hieronder aan om de foto bij te snijden op de ingrediënten die je wilt gebruiken.")
 
-            # Activeer de cropper
             cropped_img = st_cropper(
                 Image.open(uploaded_image),
                 realtime_update=True,
@@ -541,21 +541,18 @@ else:
                                     4. **Een duidelijke bereidingswijze** in stappen.
                                     """
 
-                        # Automatische retry-loop voor drukte (503 errors)
-                        # Slimme retry-loop met toenemende wachttijd voor drukte (503 errors)
                         max_retries = 3
                         response = None
                         for attempt in range(max_retries):
                             try:
                                 response = client.models.generate_content(
-                                    model='gemini-3.8-flash',
+                                    model='gemini-2.5-flash',
                                     contents=[cropped_img, prompt]
                                 )
                                 break
                             except Exception as api_err:
                                 err_str = str(api_err)
                                 if "503" in err_str and attempt < max_retries - 1:
-                                    # Wacht per poging iets langer (3 sec, daarna 6 sec)
                                     time.sleep((attempt + 1) * 3)
                                     continue
                                 else:
