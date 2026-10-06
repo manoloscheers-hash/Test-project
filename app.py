@@ -321,75 +321,133 @@ else:
                 st.markdown("---")
                 st.markdown("### 🍳 Intensiteits-specifieke Voorbeeldmaaltijden")
 
-                # --- 3. DYNAMISCHE & GESCHAALDE VOORBEELDMAALTIJDEN ---
-                # We schalen de maaltijden op basis van het verbrande aantal calorieën (doel is om de verbranding aan te vullen)
+                # --- 3. VARIËRENDE & GESCHAALDE VOORBEELDMAALTIJDEN ---
+                # We gebruiken de ID of unieke eigenschappen van de activiteit om te zorgen dat je niet steeds dezelfde maaltijden krijgt.
+
+                # Bepaal een variatie-index op basis van de activiteit ID of afstand
+                act_hash = hash(str(selected_act['id'])) % 3  # Geeft 0, 1 of 2 als unieke variant
 
                 if training_type == "Intensief (Interval / Tempo)":
-                    # Reken portiewaarden uit op basis van totale verbranding (ongeveer 60% van cals moet uit koolhydraten komen)
-                    c_maaltijd_1 = int(cals * 0.25)
-                    c_maaltijd_2 = int(cals * 0.45)
-                    c_maaltijd_3 = int(cals * 0.30)
+                    c_m1 = int(cals * 0.35)
+                    c_m2 = int(cals * 0.65)
 
-                    st.markdown(f"""
-                                    *Na een intensieve prikkel (verbranding: {cals} kcal) hebben je spieren directe herstelingrediënten nodig. De onderstaande maaltijden zijn exact afgestemd op jouw sessie van vandaag:*
+                    if act_hash == 0:
+                        st.markdown(f"""
+                                        *Intensieve sessie ({cals} kcal) — Variatie A (Snel & Koolhydrietenrijk)*
 
-                                    **1. De Snelle Post-Workout Smoothie (Direct na training)**
-                                    * **Energie:** ca. **{c_maaltijd_1} kcal** | Koolhydraten: ~{int(c_maaltijd_1 * 0.65 / 4)}g | Eiwitten: ~{int(c_maaltijd_1 * 0.25 / 4)}g
-                                    * *Wat:* 1 grote banaan, 300ml havermelk, 1.5 schep eiwitpoeder en een hand bosbessen.
-                                    * *Waarom:* Snelle suikers en direct opneembare eiwitten om glycogeen en spierschade direct aan te pakken.
+                                        **1. Witte Rijst met Kipfilet & Zoete Saus**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.70 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
+                                        * *Wat:* 90g witte rijst, 120g gebakken kipfilet en een lichte zoete chilisaus.
+                                        * *Waarom:* Razendsnelle opname van glycogeen door de witte rijst.
 
-                                    **2. Hoofdmaaltijd: Rijst met Kip en Zoete Aardappel**
-                                    * **Energie:** ca. **{c_maaltijd_2} kcal** | Koolhydraten: ~{int(c_maaltijd_2 * 0.60 / 4)}g | Eiwitten: ~{int(c_maaltijd_2 * 0.25 / 4)}g
-                                    * *Wat:* Ruime portie witte rijst/zoete aardappel ({int(c_maaltijd_2 * 0.15)}g droog gewicht), 150g kipfilet, broccoliroosjes en olijfolie.
-                                    * *Waarom:* Grote hoeveelheid snelle koolhydraten en eiwitten die precies past bij de zwaarte van deze intervaltraining.
+                                        **2. Hartige Power Wraps**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
+                                        * *Wat:* 2 grote volkoren wraps gevuld met tonijn (of vega-reepjes), mais, kidneybonen en guacamole.
+                                        * *Waarom:* Optimale mix van complexe koolhydraten en eiwitten voor spierherstel.
+                                        """)
+                    elif act_hash == 1:
+                        st.markdown(f"""
+                                        *Intensieve sessie ({cals} kcal) — Variatie B (De Smoothie & Pasta-combinatie)*
 
-                                    **3. Avondsnack / Herstelmaaltijd: Volkoren Pannenkoeken**
-                                    * **Energie:** ca. **{c_maaltijd_3} kcal** | Koolhydraten: ~{int(c_maaltijd_3 * 0.55 / 4)}g | Eiwitten: ~{int(c_maaltijd_3 * 0.20 / 4)}g
-                                    * *Wat:* 3 volkoren pannenkoeken met een ei, melk, rijkelijk overgoten met honing en banaan.
-                                    * *Waarom:* Vult de resterende energievraag aan voor een complete nachtenlijke rust en spieropbouw.
-                                    """)
+                                        **1. Herstel-Smoothiekom met Granola**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
+                                        * *Wat:* Kom van 250g magere kwark, 1 banaan, hand bosbessen en 40g granola on top.
+                                        * *Waarom:* Snel en fris na een pittige inspanning.
+
+                                        **2. Volkoren Spaghetti Bolognese**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
+                                        * *Wat:* 100g volkoren spaghetti met mager rundergehakt (of linzen) en tomaten-groentensaus.
+                                        * *Waarom:* Klassieke brandstof om je glycogeenvoorraad maximaal mee aan te vullen.
+                                        """)
+                    else:
+                        st.markdown(f"""
+                                        *Intensieve sessie ({cals} kcal) — Variatie C (Pannenkoeken & Omelet)*
+
+                                        **1. Banaan-Haver Pannenkoeken**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
+                                        * *Wat:* 3 pannenkoeken gemaakt van 1 geprakte banaan, 1 ei en 60g havermeel, afgetopt met honing.
+                                        * *Waarom:* Natuurlijke suikers en trage koolhydraten gecombineerd.
+
+                                        **2. Noedels met Tofu/Kip & Groenten-wok**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
+                                        * *Wat:* Noedels gewokt met een ruime portie groenten, cashewnoten en kipreepjes/tofu.
+                                        * *Waarom:* Snelle koolhydraten uit noedels en gezonde vetten/eiwitten.
+                                        """)
 
                 elif training_type == "Lange Duurloop (LSD)":
-                    c_maaltijd_1 = int(cals * 0.30)
-                    c_maaltijd_2 = int(cals * 0.45)
-                    c_maaltijd_3 = int(cals * 0.25)
+                    c_m1 = int(cals * 0.35)
+                    c_m2 = int(cals * 0.65)
 
-                    st.markdown(f"""
-                                    *Tijdens deze lange duurloop ({selected_act['distance']} km / {cals} kcal) zijn je glycogeenreserves diep aangesproken. De maaltijden hieronder leveren langzame energie en de nodige zouten:*
+                    if act_hash == 0:
+                        st.markdown(f"""
+                                        *Lange Duurloop ({cals} kcal) — Variatie A (Oats & Volkoren)*
 
-                                    **1. De Power Havermoutkom (Ochtend / Post-run)**
-                                    * **Energie:** ca. **{c_maaltijd_1} kcal** | Koolhydraten: ~{int(c_maaltijd_1 * 0.60 / 4)}g | Eiwitten: ~{int(c_maaltijd_1 * 0.20 / 4)}g
-                                    * *Wat:* Flinke portie havermout in melk, 1.5 el pindakaas, gesneden appel, kaneel en een handje ongezouten noten.
-                                    * *Waarom:* Langzame koolhydraten voor langdurige afgifte en gezonde vetten voor je herstel.
+                                        **1. Kaneel-Appel Havermout**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.65 / 4)}g | Eiwitten: ~{int(c_m1 * 0.20 / 4)}g
+                                        * *Wat:* 70g havermout in melk met een appel, handje rozijnen en een lepel pindakaas.
+                                        * *Waarom:* Ideaal na een lange duurloop voor geleidelijke energieafgifte.
 
-                                    **2. Hoofdmaaltijd: Volkoren Pasta Bolognese (Rijk aan groenten)**
-                                    * **Energie:** ca. **{c_maaltijd_2} kcal** | Koolhydraten: ~{int(c_maaltijd_2 * 0.60 / 4)}g | Eiwitten: ~{int(c_maaltijd_2 * 0.25 / 4)}g
-                                    * *Wat:* Ruime portie volkoren pasta, tomatensaus met veel groenten (paprika, courgette) en mager rundergehakt/linzen.
-                                    * *Waarom:* Vult de enorme koolhydraatvoorraad weer aan en levert ijzer en bouwstoffen.
+                                        **2. Quinoa-Bowl met Geroosterde Groenten & Zalm/Kip**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
+                                        * *Wat:* Kom quinoa met geroosterde pompoen/wortel, feta en kipfilet of zalm.
+                                        * *Waarom:* Rijk aan trage koolhydraten en gezonde omega-3 vetzuren.
+                                        """)
+                    elif act_hash == 1:
+                        st.markdown(f"""
+                                        *Lange Duurloop ({cals} kcal) — Variatie B (Brood & Couscous)*
 
-                                    **3. Geroosterde Volkoren Boterhammen met Avocado & Eieren**
-                                    * **Energie:** ca. **{c_maaltijd_3} kcal** | Koolhydraten: ~{int(c_maaltijd_3 * 0.45 / 4)}g | Eiwitten: ~{int(c_maaltijd_3 * 0.25 / 4)}g
-                                    * *Wat:* Sneetjes volkoren brood, geprakte avocado, 2 eieren en een snuf zeezout (voor zoutaanvulling na het zweten).
-                                    * *Waarom:* Vezels, eiwitten en broodnodige natrium/zouten.
-                                    """)
+                                        **1. Geroosterde Volkoren Boterhammen met Avocado & Eieren**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.45 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
+                                        * *Wat:* 3 sneetjes volkoren brood, 1 geprakte avocado, 2 gekookte eieren en zeezout.
+                                        * *Waarom:* Vult direct je zouten (natrium) aan na lang zweten.
 
+                                        **2. Couscous Schotel met Kikkererwten & Feta**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.60 / 4)}g | Eiwitten: ~{int(c_m2 * 0.25 / 4)}g
+                                        * *Wat:* Couscous met kikkererwten, komkommer, tomaat, olijfolie en fetablokjes.
+                                        * *Waarom:* Licht verteerbare koolhydraten die snel energie geven na kilometers maken.
+                                        """)
+                    else:
+                        st.markdown(f"""
+                                        *Lange Duurloop ({cals} kcal) — Variatie C (Aardappel & Griesmeel)*
 
+                                        **1. Gebakken Aardappelpartjes met Kwark-dip**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.60 / 4)}g | Eiwitten: ~{int(c_m1 * 0.25 / 4)}g
+                                        * *Wat:* In de oven geroosterde aardappels met een frisse kruidenkwark dip.
+                                        * *Waarom:* Aardappelen zijn een fantastische bron van kalium en koolhydraten voor lopers.
+
+                                        **2. Volkoren Aardappel-Prei Stamppot (of Rijstschotel)**
+                                        * **Energie:** ca. **{c_m2} kcal** | Koolhydraten: ~{int(c_m2 * 0.55 / 4)}g | Eiwitten: ~{int(c_m2 * 0.30 / 4)}g
+                                        * *Wat:* Stamppot of ovenschotel met mager gehakt of vegetarische rookworst.
+                                        * *Waarom:* Traditioneel en vullend om je energiereserves weer volledig op te laden.
+                                        """)
                 else:
-                    st.markdown(f"""
-                    *Bij een lichte of herstelloop is de schade minimaal; je hoeft minder agressief aan te vullen, maar eiwitten blijven belangrijk.*
+                    c_m1 = int(max(cals, 350) * 0.50)
+                    c_m2 = int(max(cals, 350) * 0.50)
 
-                    **1. Magere Kwark met Fruit en Noten**
-                    * *Wat:* 250g magere kwark met een handje muesli, rood fruit en een handje walnoten.
-                    * *Waarom:* Hoog in caseïne-eiwitten voor langdurig spierherstel zonder overbodige suikers.
+                    if act_hash == 0:
+                        st.markdown(f"""
+                                        *Herstelloop ({cals} kcal) — Variatie A*
 
-                    **2. Omelet met Volkoren Brood**
-                    * *Wat:* 2 eieren gebakken met spinazie en tomaat, geserveerd op 2 sneetjes volkoren brood.
-                    * *Waarom:* Lichte, eiwitrijke maaltijd die je spieren voedt zonder dat het zwaar op de maag ligt.
+                                        **1. Magere Kwark met Blauwe Bessen & Walnoten**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.40 / 4)}g | Eiwitten: ~{int(c_m1 * 0.45 / 4)}g
+                                        * *Wat:* 250g kwark met handje bessen en walnoten.
+                                        """)
+                    elif act_hash == 1:
+                        st.markdown(f"""
+                                        *Herstelloop ({cals} kcal) — Variatie B*
 
-                    **3. Salade met Quinoa en Tonijn**
-                    * *Wat:* Kom quinoa, komkommer, tomaat, een blikje tonijn en een dressing van olijfolie en citroen.
-                    * *Waarom:* Lichte koolhydraten en gezonde vetten/eiwitten voor een vlot herstel.
-                    """)
+                                        **1. Smoothie van Bosvruchten & Eiwitpoeder**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.50 / 4)}g | Eiwitten: ~{int(c_m1 * 0.35 / 4)}g
+                                        * *Wat:* Bevroren bosvruchten, magere melk en schep wei-eiwit.
+                                        """)
+                    else:
+                        st.markdown(f"""
+                                        *Herstelloop ({cals} kcal) — Variatie C*
+
+                                        **1. Griekse Yoghurt met Honing & Amandelen**
+                                        * **Energie:** ca. **{c_m1} kcal** | Koolhydraten: ~{int(c_m1 * 0.45 / 4)}g | Eiwitten: ~{int(c_m1 * 0.35 / 4)}g
+                                        * *Wat:* Kom Griekse yoghurt met scheutje honing en gehakte amandelen.
+                                        """)
             else:
                 st.warning("Geen recente hardloopactiviteiten gevonden.")
     except Exception as e:
