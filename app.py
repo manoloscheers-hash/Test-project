@@ -403,7 +403,7 @@ else:
         with col2:
             st.markdown(f"""
                 <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
-                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronische Load</div>
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronic Load</div>
                     <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{round(chronic_load, 1)}</div>
                     <div style="font-size: 11px; color: {text_sub};">Fitheidsbasis (42d)</div>
                 </div>
@@ -435,7 +435,7 @@ else:
                 st.markdown("### Hoe wordt dit berekend?")
                 st.markdown("""
                 * **Acute Load (7 dagen):** Jouw trainingsbelasting van de afgelopen week.
-                * **Chronische Load (42 dagen):** Je langetermijnfitheid (belastbaarheid).
+                * **Chronic Load (42 dagen):** Je langetermijnfitheid (belastbaarheid).
                 * **ACWR:** De verhouding tussen Acute en Chronische load. 
                 * **Optimal Sweet Spot:** De groene band beweegt mee met je fitheid voor veilige progressie.
                 """)
