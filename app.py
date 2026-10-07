@@ -475,32 +475,32 @@ else:
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            # Converteer naar echte datetime-objecten zodat sorteren op datum feilloos werkt
+            # Sorteer direct op datum (nieuwste eerst) met veilige datetime conversie
             sorted_activities = sorted(
                 filtered_activities_list,
-                key=lambda x: pd.to_datetime(x.get('Datum', ''), errors='coerce'),
+                key=lambda x: pd.to_datetime(str(x.get('Datum', '')), errors='coerce'),
                 reverse=True
             )
 
             for act in sorted_activities[:3]:
-                act_date = act.get('Datum', '')
+                act_date = str(act.get('Datum', ''))
                 act_label = act.get('label', 'Training')
                 act_mins = act.get('time_mins', 0)
                 act_cals = act.get('calories', 0)
                 act_load = act.get('load', 0)
 
                 st.markdown(f"""
-                    <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
-                            <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
-                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                            <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
+                                    <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
+                                    <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
 
         if weekly_details:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
