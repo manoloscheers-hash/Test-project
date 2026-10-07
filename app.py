@@ -350,7 +350,7 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        # --- GARMIN-STYLE STATUS WIDGET ---
+        # --- STATUS WIDGET ---
         if acwr < 0.8:
             status_title = "Onderbelast (Opbouwfase)"
             status_color = "#3b82f6"
@@ -383,39 +383,44 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # Aangepaste metrische kaarten met een strakke achtergrond en goed zichtbare donkere/witte contrasten
+        # --- RESPONSIEVE KAARTEN (WERKT PERFECT OP LAPTOP EN TELEFOON IN DARK/LIGHT MODE) ---
+        card_bg = "rgba(255, 255, 255, 0.04)"
+        card_border = "1px solid rgba(255, 255, 255, 0.08)"
+        text_main = "#f8fafc"
+        text_sub = "#94a3b8"
+
         col1, col2, col3 = st.columns(3)
 
         with col1:
             st.markdown(f"""
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔥 Acute Load (7d)</div>
-                    <div style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 6px 0;">{round(acute_load, 1)}</div>
-                    <div style="font-size: 12px; color: #64748b;">Recente vermoeidheid</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">🔥 Acute Load</div>
+                    <div style="font-size: 24px; font-weight: 800; color: {text_main}; margin: 4px 0;">{round(acute_load, 1)}</div>
+                    <div style="font-size: 11px; color: {text_sub};">Afgelopen 7 dagen</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"""
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronic Load (42d)</div>
-                    <div style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 6px 0;">{round(chronic_load, 1)}</div>
-                    <div style="font-size: 12px; color: #64748b;">Fitheidsbasis</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">🛡️ Chronic Load</div>
+                    <div style="font-size: 24px; font-weight: 800; color: {text_main}; margin: 4px 0;">{round(chronic_load, 1)}</div>
+                    <div style="font-size: 11px; color: {text_sub};">Fitheidsbasis (42d)</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown(f"""
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">⚖️ ACWR Ratio</div>
-                    <div style="font-size: 28px; font-weight: 800; color: {status_color}; margin: 6px 0;">{round(acwr, 2)}</div>
-                    <div style="font-size: 12px; color: #64748b;">Doel: 0.8 - 1.3</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">⚖️ ACWR Ratio</div>
+                    <div style="font-size: 24px; font-weight: 800; color: {status_color}; margin: 4px 0;">{round(acwr, 2)}</div>
+                    <div style="font-size: 11px; color: {text_sub};">Doel: 0.8 - 1.3</div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- GRAFIEK MET BEWEGENDE SWEET SPOT ---
+        # --- GRAFIEK ---
         if "Chronic_Load" not in chart_df.columns:
             chart_df["Chronic_Load"] = chart_df["Trainingsbelasting"].rolling(window=4, min_periods=1).mean()
 
@@ -456,26 +461,39 @@ else:
         fig.update_layout(
             xaxis_type="date",
             margin=dict(l=10, r=10, t=10, b=10),
-            height=340,
+            height=320,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#94a3b8"),
+            xaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
+            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
             showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- STRAVA STYLE RECENTE ACTIVITEITEN FEED ---
+        # --- RECENTE ACTIVITEITEN FEED (GEFILTERD OP ECHTE RECENTE TRAININGEN) ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
-            for act in filtered_activities_list[:3]:
+
+            # Sorteer op datum aflopend (nieuwste eerst) en pak de top 3
+            sorted_activities = sorted(filtered_activities_list, key=lambda x: x.get('Datum', ''), reverse=True)
+
+            for act in sorted_activities[:3]:
+                act_date = act.get('Datum', '')
+                act_label = act.get('label', 'Training')
+                act_mins = act.get('time_mins', 0)
+                act_cals = act.get('calories', 0)
+                act_load = act.get('load', 0)
+
                 st.markdown(f"""
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                    <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <span style="font-weight: 600; font-size: 14px; color: #0f172a;">{act['label']}</span><br>
-                            <span style="font-size: 12px; color: #64748b;">⏱️ {act['time_mins']} min &nbsp;•&nbsp; 🔥 {act['calories']} kcal</span>
+                            <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
+                            <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
                         </div>
                         <div style="text-align: right;">
-                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; display: block; font-weight: 600;">Session Score</span>
-                            <span style="font-size: 15px; font-weight: 700; color: #059669;">{act['load']}</span>
+                            <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
+                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
