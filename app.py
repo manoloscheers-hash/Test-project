@@ -372,7 +372,6 @@ else:
             status_bg = "linear-gradient(135deg, #7f1d1d 0%, #0f172a 100%)"
             status_desc = "Pas op! Je riskeert blessures. Las direct een rustperiode in."
 
-        # Moderne sporthorloge-stijl hoofdbanner met gradient
         st.markdown(f"""
             <div style="background: {status_bg}; border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 20px; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -384,39 +383,39 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # Garmin-style metrische widgets (strakke kaarten met gekleurde accenten)
+        # Aangepaste metrische kaarten met een strakke achtergrond en goed zichtbare donkere/witte contrasten
         col1, col2, col3 = st.columns(3)
 
         with col1:
             st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">🔥 Acute Load (7d)</div>
-                    <div style="font-size: 26px; font-weight: 800; color: #f8fafc; margin: 5px 0;">{round(acute_load, 1)}</div>
-                    <div style="font-size: 11px; color: #64748b;">Recente vermoeidheid</div>
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔥 Acute Load (7d)</div>
+                    <div style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 6px 0;">{round(acute_load, 1)}</div>
+                    <div style="font-size: 12px; color: #64748b;">Recente vermoeidheid</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">🛡️ Chronic Load (42d)</div>
-                    <div style="font-size: 26px; font-weight: 800; color: #f8fafc; margin: 5px 0;">{round(chronic_load, 1)}</div>
-                    <div style="font-size: 11px; color: #64748b;">Fitheidsbasis</div>
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronic Load (42d)</div>
+                    <div style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 6px 0;">{round(chronic_load, 1)}</div>
+                    <div style="font-size: 12px; color: #64748b;">Fitheidsbasis</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">⚖️ ACWR Ratio</div>
-                    <div style="font-size: 26px; font-weight: 800; color: {status_color}; margin: 5px 0;">{round(acwr, 2)}</div>
-                    <div style="font-size: 11px; color: #64748b;">Doel: 0.8 - 1.3</div>
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">⚖️ ACWR Ratio</div>
+                    <div style="font-size: 28px; font-weight: 800; color: {status_color}; margin: 6px 0;">{round(acwr, 2)}</div>
+                    <div style="font-size: 12px; color: #64748b;">Doel: 0.8 - 1.3</div>
                 </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- GRAFIEK MET DONKERE SPORT-VIBE ---
+        # --- GRAFIEK MET BEWEGENDE SWEET SPOT ---
         if "Chronic_Load" not in chart_df.columns:
             chart_df["Chronic_Load"] = chart_df["Trainingsbelasting"].rolling(window=4, min_periods=1).mean()
 
@@ -438,7 +437,6 @@ else:
 
         fig = px.line(chart_df, x="Datum", y="Trainingsbelasting")
 
-        # Sweet spot band zonder randen
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_High"],
             mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'
@@ -446,12 +444,11 @@ else:
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_Low"],
             mode='lines', line=dict(width=0), fill='tonexty',
-            fillcolor='rgba(16, 185, 129, 0.12)', name='Optimal Sweet Spot', hoverinfo='skip'
+            fillcolor='rgba(16, 185, 129, 0.15)', name='Optimal Sweet Spot', hoverinfo='skip'
         )
 
-        # Hoofdlijn in strakke Strava-oranje/rode kleur met markers
         fig.add_trace(px.line(chart_df, x="Datum", y="Trainingsbelasting", markers=True).data[0])
-        fig.data[-1].line.color = "#FF5500"  # Strava-oranje vibe
+        fig.data[-1].line.color = "#FF5500"
         fig.data[-1].line.width = 3
         fig.data[-1].marker.size = 6
         fig.data[-1].marker.color = "#FF5500"
@@ -462,9 +459,6 @@ else:
             height=340,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#94a3b8"),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
             showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -474,14 +468,14 @@ else:
             st.subheader("⚡ Recente Activiteiten")
             for act in filtered_activities_list[:3]:
                 st.markdown(f"""
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
                         <div>
-                            <span style="font-weight: 600; font-size: 14px; color: #f8fafc;">{act['label']}</span><br>
-                            <span style="font-size: 12px; color: #94a3b8;">⏱️ {act['time_mins']} min &nbsp;•&nbsp; 🔥 {act['calories']} kcal</span>
+                            <span style="font-weight: 600; font-size: 14px; color: #0f172a;">{act['label']}</span><br>
+                            <span style="font-size: 12px; color: #64748b;">⏱️ {act['time_mins']} min &nbsp;•&nbsp; 🔥 {act['calories']} kcal</span>
                         </div>
                         <div style="text-align: right;">
-                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; display: block;">Session Score</span>
-                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act['load']}</span>
+                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; display: block; font-weight: 600;">Session Score</span>
+                            <span style="font-size: 15px; font-weight: 700; color: #059669;">{act['load']}</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
