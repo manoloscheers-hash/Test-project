@@ -384,7 +384,7 @@ else:
         col1, col2, col3 = st.columns(3)
         col1.metric("🔥 Acute Load (7d)", f"{round(acute_load, 1)}", help="Jouw vermoeidheid van de afgelopen week.")
         col2.metric("🛡️ Chronic Load (42d)", f"{round(chronic_load, 1)}", help="Jouw solide fitheidsbasis.")
-        col3.metric("⚖️ ACWR Ratio", f"{round(acwr, 2)}", help="De verhouding tussen acute en chronique belasting.")
+        col3.metric("⚖️ ACWR Ratio", f"{round(acwr, 2)}", help="De verhouding tussen acute en chronische belasting.")
 
         st.markdown("---")
 
@@ -404,8 +404,8 @@ else:
                 st.markdown("""
                 * **Acute Load (7 dagen):** Meet je recente vermoeidheid en trainingsbelasting van de afgelopen week.
                 * **Chronic Load (42 dagen):** Meet je langetermijnfitheid (je belastbaarheid).
-                * **ACWR (Acute-to-Chronic Workload Ratio):** De deling `Acute Load / Chronic Load`.
-                * **De Sweet Spot:** Lijnspecductie waarbij je ACWR tussen **0.8 en 1.3** blijft. Dit is de ideale zone om progressie te boeken zonder blessures op te lopen. De groene band ademt automatisch mee met je fitheid!
+                * **ACWR (Acute-to-Chronic Workload Ratio):** De deling tussen Acute Load en Chronic Load.
+                * **De Sweet Spot:** Dit is de ideale zone om progressie te boeken zonder blessures op te lopen.
                 """)
 
         fig = px.line(chart_df, x="Datum", y="Trainingsbelasting")
