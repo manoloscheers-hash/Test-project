@@ -485,53 +485,36 @@ else:
                             return parsed
                 return pd.Timestamp.min
 
-                # --- RECENTE ACTIVITEITEN FEED (DIRECT GEKOPPELD AAN DE DATA) ---
-                if filtered_activities_list:
+                # --- RECENTE ACTIVITEITEN FEED (DIRECT EN ROBUUST) ---
+            if filtered_activities_list:
                     st.subheader("⚡ Recente Activiteiten")
 
-                    # Sorteer de lijst. We kijken eerst naar de datumsleutels, en anders sorteren we op basis van de index of volgorde in de lijst
-                    def get_sorting_key(item):
-                        for key in ['Datum', 'date', 'Date', 'DATUM', 'timestamp', 'time']:
-                            if key in item and item[key]:
-                                parsed = pd.to_datetime(str(item[key]), errors='coerce')
-                                if not pd.isna(parsed):
-                                    return parsed
-                        return pd.Timestamp.min
-
-                    # Sorteer de lijst. Als je merkt dat de oudste bovenaan staan, verander dan reverse=True naar reverse=False
+                    # Sorteer direct op de datumwaarde uit het object
                     sorted_activities = sorted(
                         filtered_activities_list,
-                        key=get_sorting_key,
+                        key=lambda x: pd.to_datetime(str(x.get('Datum', x.get('date', '1970-01-01'))), errors='coerce'),
                         reverse=True
                     )
 
                     for act in sorted_activities[:3]:
-                        # Probeer alle mogelijke sleutels voor de velden te vangen
-                        act_date = None
-                        for key in ['Datum', 'date', 'Date', 'DATUM']:
-                            if key in act and act[key]:
-                                act_date = str(act[key])
-                                break
-                        if not act_date:
-                            act_date = "Onbekend"
-
-                        act_label = act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training'))))
-                        act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
+                        act_date = str(act.get('Datum', act.get('date', 'Onbekend')))
+                        act_label = act.get('label', act.get('Name', 'Training'))
+                        act_mins = act.get('time_mins', act.get('Moving Time', 0))
                         act_cals = act.get('calories', act.get('Calories', 0))
-                        act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
+                        act_load = act.get('load', act.get('Training Load', 0))
 
                         st.markdown(f"""
-                                <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
-                                        <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
+                                    <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
+                                            <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
+                                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
+                                        </div>
                                     </div>
-                                    <div style="text-align: right;">
-                                        <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
-                                        <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
 
         if weekly_details:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
