@@ -383,7 +383,7 @@ else:
             with st.popover("ℹ️ Uitleg"):
                 st.markdown("### Hoe wordt de belasting berekend?")
                 st.markdown(
-                    "De trainingsbelasting gebruikt jouw nieuwe fysiologische 3-stappenmodel:\n\n"
+                    "De trainingsbelasting een fysiologische 3-stappenmodel:\n\n"
                     "- **HR-Load (Stap 1):** Berekend op basis van intensiteitsfactoren per hartslagzone.\n"
                     "- **Session Score / SS (Stap 2):** Gecorrigeerd voor sporttype, hoogtemeters ($D^+$ en $D^-$) en cadans.\n"
                     "- **ACWR (Stap 3):** De verhouding tussen korte-termijn vermoeidheid (ATL) en lange-termijn fitness (CTL)."
