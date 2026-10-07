@@ -81,17 +81,19 @@ def render_actionable_coaching_module(acwr_value, acute_load, chronic_load, card
                                       user_goal):
     """
     Genereert helder, direct toepasbaar trainingsadvies op basis van de ACWR
-    en toetst dit aan het in de sidebar ingestelde doel.
+    en past zich volledig aan op het gekozen doel (bijv. 5km, marathon, of vrij).
     """
     st.subheader("🎯 Coach Advies & Doelmonitor")
 
-    # Bepaal het advies op basis van de ACWR waarde en of er een vast schema is
-    if user_goal == "Geen vast schema (Train op gevoel)":
+    # Bepaal het advies op basis van de ACWR waarde en het gekozen doel
+    is_vrij_trainen = ("vrij" in user_goal.lower()) or ("geen vast schema" in user_goal.lower())
+
+    if is_vrij_trainen:
         if acwr_value < 0.8:
             status_color = "#3b82f6"
             status_title = "Luister naar je lichaam: Ruimte voor power"
             advice = "Je belasting is laag. Je voelt je waarschijnlijk fris en fit genoeg om lekker door te trekken als je daar zin in hebt."
-            action = "👉 **Advies voor vandaag:** Heb je energie? Pak een mooie intensieve prikkel mee!"
+            action = "👉 **Advies voor vandaag:** Heb je energie? Pak een mooie intensieve prikkel mee op gevoel!"
         elif 0.8 <= acwr_value <= 1.3:
             status_color = "#10b981"
             status_title = "Lekker in de flow"
@@ -106,22 +108,22 @@ def render_actionable_coaching_module(acwr_value, acute_load, chronic_load, card
         if acwr_value < 0.8:
             status_color = "#3b82f6"
             status_title = "Groen Licht: Ruimte voor intensiteit"
-            advice = "Je belasting is momenteel aan de lage kant. Je herstelt uitstekend volgens je planning."
-            action = "👉 **Advies voor vandaag:** Voeg een kwalitatieve prikkel toe volgens je schema."
+            advice = f"Je belasting is momenteel aan de lage kant voor je doel ({user_goal}). Ruimte voor een gerichte prikkel."
+            action = "👉 **Advies voor vandaag:** Voeg een kwalitatieve interval- of temposessie toe."
         elif 0.8 <= acwr_value <= 1.3:
             status_color = "#10b981"
             status_title = "Sweet Spot: Perfecte balans"
-            advice = "Je zit in de ideale opbouwzone richting je doel. Conditie groeit gestaag zonder onverantwoord risico."
-            action = "👉 **Advies voor vandaag:** Volg je geplande schema nauwgezet."
+            advice = f"Je zit in de ideale opbouwzone richting je doel: {user_goal}."
+            action = "👉 **Advies voor vandaag:** Houd je strak aan je opbouwende trainingsschema."
         elif 1.3 < acwr_value <= 1.5:
             status_color = "#f59e0b"
             status_title = "Waarschuwing: Snelle stijging"
             advice = "Je belasting stijgt sneller dan je fitheidsbasis kan bijbenen."
-            action = "👉 **Advies voor vandaag:** Overweeg een rustdag of pas je schema iets aan."
+            action = "👉 **Advies voor vandaag:** Overweeg een rustdag om overbelasting te voorkomen."
         else:
             status_color = "#ef4444"
             status_title = "Gevaarlijke Piek: Gas terugnemen!"
-            advice = "Alarmfase! Je ACWR is te hoog. Risico op overbelasting is acuut."
+            advice = "Alarmfase! Je ACWR is te hoog voor een veilig verloop van je schema."
             action = "👉 **Advies voor vandaag:** Neem direct rust of doe uitsluitend actieve hersteltraining."
 
     # Render de UI kaart voor de gebruiker
@@ -135,34 +137,42 @@ def render_actionable_coaching_module(acwr_value, acute_load, chronic_load, card
         </div>
     """, unsafe_allow_html=True)
 
-    # --- DOELGERICHTE CHECK ---
+    # --- DOELGERICHTE CHECK (Op 0 decimalen) ---
     with st.expander(f"🏁 Voortgang richting doel: {user_goal}"):
-        if user_goal == "Sub-2:40 Marathon":
+        if "Sub-2:40" in user_goal:
             st.markdown(f"""
                 * **Streefpace:** ~3:47 min/km
-                * **Huidige Acute Belasting:** {round(acute_load, 1)}
-                * **Fitheidsbasis (Chronic Load):** {round(chronic_load, 1)}
+                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
+                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
             """)
             if chronic_load >= 500:
                 st.success("✅ Je fitheidsbasis is solide genoeg om dit volume vast te houden voor een snelle marathon.")
             else:
                 st.warning(
                     "⚠️ Je fitheidsbasis is nog wat aan de lage kant voor een sub-2:40 poging. Bouw gestaag uit.")
-        elif user_goal == "10 km / Halve Marathon Persoonlijk Record":
+        elif "5 km" in user_goal or "10 km" in user_goal:
             st.markdown(f"""
-                * **Focus:** Snelheid en drempelwerk
-                * **Huidige Acute Belasting:** {round(acute_load, 1)}
-                * **Fitheidsbasis (Chronic Load):** {round(chronic_load, 1)}
+                * **Focus:** Snelheid, VO2max en drempelwerk
+                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
+                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
             """)
-            st.info("💡 Zorg voor voldoende afwisseling tussen intensieve blokken en rustige kilometers.")
+            st.info("💡 Korte, intensieve prikkels en voldoende herstel zijn cruciaal voor een scherpe 5k/10k tijd.")
+        elif "Halve Marathon" in user_goal:
+            st.markdown(f"""
+                * **Focus:** Drempelduurvermogen en tempo-uithoudingsvermogen
+                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
+                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
+            """)
+            st.info(
+                "💡 Zorg voor een gezonde balans tussen langere duurlopen en blokkentraining op halve marathon tempo.")
         else:
             st.markdown(f"""
                 * **Focus:** Vrij en flexibel trainen op gevoel
-                * **Huidige Acute Belasting:** {round(acute_load, 1)}
-                * **Fitheidsbasis (Chronic Load):** {round(chronic_load, 1)}
+                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
+                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
             """)
             st.success(
-                "👍 Je traint zonder strak schema; gebruik de ACWR en belasting puur als richtlijn voor je herstel.")
+                "👍 Je traint zonder strak schema; gebruik deze cijfers puur als indicatie voor je herstel en energie.")
 
 
 # --- HELPERS VOOR VERMOEIDHEIDSBEREKENING ---
@@ -194,7 +204,7 @@ def bereken_session_score(activity, zones_tijden=None):
     f_cad = 1.0
 
     session_score = hr_load * f_type * f_elev * f_cad
-    return round(session_score, 1)
+    return round(session_score, 0)
 
 
 # --- SESSION STATE INITIALISATIE ---
@@ -248,7 +258,9 @@ else:
         "Kies of stel je doel in:",
         [
             "Sub-2:40 Marathon",
-            "10 km / Halve Marathon Persoonlijk Record",
+            "Halve Marathon Persoonlijk Record",
+            "10 km Persoonlijk Record",
+            "5 km Persoonlijk Record",
             "Geen vast schema (Train op gevoel)",
             "Algemene Conditie & Fitheid"
         ]
@@ -384,7 +396,7 @@ else:
                 filtered_raw_weeks[act_monday]["cals"] += act["calories"]
 
         sorted_dates = sorted(filtered_raw_weeks.keys())
-        weekly_loads = [round(filtered_raw_weeks[m]["load"], 1) for m in sorted_dates]
+        weekly_loads = [int(round(filtered_raw_weeks[m]["load"], 0)) for m in sorted_dates]
 
         cutoff_acute = now - datetime.timedelta(days=7)
         acute_load = sum([a["load"] for a in parsed_activities if a["datetime"] >= cutoff_acute])
@@ -405,10 +417,10 @@ else:
             weekly_details.append({
                 "Week Start": m.strftime("%d %b"),
                 "Afstand (km)": round(d["dist"], 1),
-                "Gem. HR": round(avg_h, 1) if avg_h > 0 else "N.B.",
-                "Tijd (min)": round(d["times"], 1),
-                "Kcal": round(d["cals"], 0),
-                "Load": round(d["load"], 1)
+                "Gem. HR": int(round(avg_h, 0)) if avg_h > 0 else "N.B.",
+                "Tijd (min)": int(round(d["times"], 0)),
+                "Kcal": int(round(d["cals"], 0)),
+                "Load": int(round(d["load"], 0))
             })
 
     except Exception as e:
@@ -458,7 +470,7 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # --- VASTE DONKERE SPORT-WIDGETS (OP 1 DECIMAAL) ---
+        # --- VASTE DONKERE SPORT-WIDGETS (OP 0 DECIMALEN) ---
         card_bg = "#0f172a"
         card_border = "1px solid rgba(255, 255, 255, 0.1)"
         text_main = "#ffffff"
@@ -470,7 +482,7 @@ else:
             st.markdown(f"""
                 <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
                     <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔥 Acute Load</div>
-                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{round(acute_load, 1)}</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{int(round(acute_load, 0))}</div>
                     <div style="font-size: 11px; color: {text_sub};">Afgelopen 7 dagen</div>
                 </div>
             """, unsafe_allow_html=True)
@@ -479,7 +491,7 @@ else:
             st.markdown(f"""
                 <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
                     <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronic Load</div>
-                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{round(chronic_load, 1)}</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{int(round(chronic_load, 0))}</div>
                     <div style="font-size: 11px; color: {text_sub};">Fitheidsbasis (42d)</div>
                 </div>
             """, unsafe_allow_html=True)
@@ -582,9 +594,9 @@ else:
                     match = re.search(r'\d{2}-\d{2}-\d{4}', act_label)
                     act_date = match.group(0) if match else "Onbekend"
 
-                act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
-                act_cals = act.get('calories', act.get('Calories', 0))
-                act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
+                act_mins = int(round(float(act.get('time_mins', 0)), 0))
+                act_cals = int(round(float(act.get('calories', 0)), 0))
+                act_load = int(round(float(act.get('load', 0)), 0))
 
                 st.markdown(f"""
                     <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
@@ -666,7 +678,7 @@ else:
 
             st.markdown("### ⏱ Herstelanalyse")
             st.info(
-                f"**Sectortype:** {training_type}\n\n**Session Score (SS):** {session_score_val} pts\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
+                f"**Sectortype:** {training_type}\n\n**Session Score (SS):** {int(round(session_score_val, 0))} pts\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
             carbs_target = int(cals * 0.55 / 4)
             protein_target = int(st.session_state.body_weight * 0.35)
