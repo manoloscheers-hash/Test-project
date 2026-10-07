@@ -72,19 +72,103 @@ st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je St
 DEFAULT_CLIENT_ID = 284865
 DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
 
+# ==============================================================================
+# MODULE: ACTIONABLE COACHING & DOELGERICHTE PERIODISERING
+# Beschrijving: Vertaalt ACWR- en belastingdata naar concrete dagadviezen en
+#               toetst de opbouw aan een specifiek doel (bijv. sub-2:40 marathon).
+# Onderhoud: Pas USER_GOAL_CONFIG aan om doelen voor andere gebruikers te wijzigen.
+# ==============================================================================
 
-# --- HELPERS VOOR NIEUWE VERMOEIDHEIDSBEREKENING (STAP 1, 2 & 3) ---
+USER_GOAL_CONFIG = {
+    "goal_name": "Sub-2:40 Marathon",
+    "target_pace_min_km": 3.47,  # Minuut per km voor 2:40:00
+    "target_weekly_km": 100,  # Richtlijn omvang
+    "min_acwr_sweet_spot": 0.8,
+    "max_acwr_sweet_spot": 1.3
+}
+
+
+def render_actionable_coaching_module(acwr_value, acute_load, chronic_load, card_bg, card_border, text_main, text_sub):
+    """
+    Genereert helder, direct toepasbaar trainingsadvies op basis van de ACWR
+    en toetst dit aan het ingestelde marathondoel.
+    """
+    st.subheader("🎯 Coach Advies & Doelmonitor")
+
+    # Bepaal het advies op basis van de ACWR waarde
+    if acwr_value < 0.8:
+        status_color = "#3b82f6"
+        status_title = "Groen Licht: Ruimte voor intensiteit"
+        advice = (
+            "Je belasting is momenteel aan de lage kant. Je herstelt uitstekend. "
+            "Dit is het perfecte moment om een stevige interval- of tempo-training in te planten "
+            "richting je doel."
+        )
+        action = "👉 **Advies voor vandaag:** Voeg een kwalitatieve prikkel toe (bijv. drempelwerk of marathontempo blokken)."
+
+    elif 0.8 <= acwr_value <= 1.3:
+        status_color = "#10b981"
+        status_title = "Sweet Spot: Perfecte balans"
+        advice = (
+            "Je zit in de ideale opbouwzone. Je conditie groeit gestaag zonder dat het risico "
+            "op blessures onverantwoord stijgt. Ideaal voor een constante opbouw naar je hoofddoel."
+        )
+        action = "👉 **Advies voor vandaag:** Volg je schema zoals gepland. Handhaaf de balans tussen duur en rust."
+
+    elif 1.3 < acwr_value <= 1.5:
+        status_color = "#f59e0b"
+        status_title = "Waarschuwing: Snelle stijging (Overbelasting risico)"
+        advice = (
+            "Je belasting stijgt sneller dan je fitheidsbasis (Chronic Load) kan bijbenen. "
+            "Hoewel dit soms nodig is voor pieken, loop je een verhoogd blessurerisico als je nu doordouwt."
+        )
+        action = "👉 **Advies voor vandaag:** Las een extra rustdag in of kies voor een loos herstelloopje in Zone 1."
+
+    else:
+        status_color = "#ef4444"
+        status_title = "Gevaarlijke Piek: Direct gas terugnemen!"
+        advice = (
+            "Alarmfase! Je ACWR is te hoog. Je lichaam krijgt geen tijd om te herstellen van de recent opgebouwde intensiteit."
+        )
+        action = "👉 **Advies voor vandaag:** Niet trainen of uitsluitend zeer actieve rust (wandelen/mobiliteit). Blessuregevaar is acuut."
+
+    # Render de UI kaart voor de gebruiker
+    st.markdown(f"""
+        <div style="background: {card_bg}; border: {card_border}; border-left: 6px solid {status_color}; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+            <h4 style="margin: 0 0 8px 0; color: {text_main};">{status_title}</h4>
+            <p style="margin: 0 0 12px 0; font-size: 14px; color: {text_sub};">{advice}</p>
+            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; font-weight: 600; color: {text_main};">
+                {action}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # --- DOELGERICHTE CHECK (MARATHON SUB-2:40) ---
+    with st.expander(f"🏁 Voortgang richting doel: {USER_GOAL_CONFIG['goal_name']}"):
+        st.markdown(f"""
+            * **Streefpace:** ~3:47 min/km
+            * **Huidige Acute Belasting:** {acute_load}
+            * **Fitheidsbasis (Chronic Load):** {chronic_load}
+        """)
+
+        if chronic_load >= 500:
+            st.success("✅ Je fitheidsbasis is solide genoeg om dit volume vast te houden voor een snelle marathon.")
+        else:
+            st.warning(
+                "⚠️ Je fitheidsbasis (Chronic Load) is nog wat aan de lage kant voor een sub-2:40 poging. Bouw de kilometers de komende weken geleidelijk uit.")
+
+
+# --- HELPERS VOOR VERMOEIDHEIDSBEREKENING ---
 def bereken_hr_load(zones_tijden):
-    """Stap 1: Berekent de fysiologische basis (HR-Load) op basis van tijd in zone 1 t/m 5."""
+    """Berekent de fysiologische basis (HR-Load) op basis van tijd in zone 1 t/m 5."""
     weegfactoren = [1.0, 2.0, 3.0, 4.5, 7.0]
     return sum(t * w for t, w in zip(zones_tijden, weegfactoren))
 
 
 def bereken_session_score(activity, zones_tijden=None):
-    """Stap 2: Berekent de Session Score (SS) inclusief factoren voor sporttype, hoogtemeters en cadans."""
+    """Berekent de Session Score (SS) inclusief factoren voor sporttype, hoogtemeters en cadans."""
     if not zones_tijden:
         duur = activity.get('time_mins', 30)
-        # Veilige schatting op basis van duur als gedetailleerde zone-streams ontbreken
         zones_tijden = [duur * 0.6, duur * 0.25, duur * 0.1, duur * 0.05, 0.0]
 
     hr_load = bereken_hr_load(zones_tijden)
@@ -96,7 +180,7 @@ def bereken_session_score(activity, zones_tijden=None):
         f_type = 1.0
     elif 'trail' in sport_type:
         f_type = 1.4
-    else:  # Standaard hardlopen
+    else:
         f_type = 1.3
 
     d_plus = activity.get('elevation_gain', 0)
@@ -106,27 +190,6 @@ def bereken_session_score(activity, zones_tijden=None):
 
     session_score = hr_load * f_type * f_elev * f_cad
     return round(session_score, 1)
-
-
-def bereken_acwr_historie(dagelijkse_loads):
-    """Stap 3: Berekent dagelijkse belasting, ATL (7 dagen), CTL (42 dagen) en ACWR."""
-    atl_lijst, ctl_lijst, acwr_lijst = [], [], []
-    atl, ctl = 0.0, 0.0
-
-    for dl in dagelijkse_loads:
-        if len(atl_lijst) == 0:
-            atl = dl
-            ctl = dl
-        else:
-            atl = atl + ((dl - atl) / 7.0)
-            ctl = ctl + ((dl - ctl) / 42.0)
-
-        acwr = (atl / ctl) if ctl > 0 else 0.0
-        atl_lijst.append(round(atl, 1))
-        ctl_lijst.append(round(ctl, 1))
-        acwr_lijst.append(round(acwr, 2))
-
-    return atl_lijst, ctl_lijst, acwr_lijst
 
 
 # --- SESSION STATE INITIALISATIE ---
@@ -155,7 +218,6 @@ if "code" in query_params and not st.session_state.access_token:
     except Exception as e:
         st.error(f"Fout bij uitwisselen autorisatiecode: {e}")
 
-# Als we nog geen access token hebben, toon de inlogknop
 if not st.session_state.access_token:
     st.info("👋 Welkom! Log in met je Strava-account om je eigen hardloop- en fietsdata te analyseren.")
 
@@ -254,11 +316,9 @@ else:
                     cal_factor = 0.45 if is_ride else 1.03
                     estimated_cals = st.session_state.body_weight * dist_km * cal_factor
 
-                    # Haal hoogtemeters op indien aanwezig in Strava object
                     elevation_gain = float(getattr(act, 'total_elevation_gain', 0.0) or 0.0)
                     elevation_loss = float(getattr(act, 'elevation_loss', 0.0) or 0.0)
 
-                    # Bouw activiteit-dictionary voor de nieuwe Session Score formule
                     temp_act_dict = {
                         'type': "Fietsen" if is_ride else "Hardlopen",
                         'time_mins': moving_time_mins,
@@ -266,7 +326,6 @@ else:
                         'elevation_loss': elevation_loss
                     }
 
-                    # Bereken trainingsbelasting via de nieuwe 3-stappen Session Score (SS)
                     training_load = bereken_session_score(temp_act_dict)
 
                     parsed_activities.append({"datetime": act_date, "load": training_load})
@@ -420,6 +479,11 @@ else:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # --- AANROEP ACTIONABLE COACHING & DOELMODULE ---
+        render_actionable_coaching_module(acwr, acute_load, chronic_load, card_bg, card_border, text_main, text_sub)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         # --- GRAFIEK ---
         if "Chronic_Load" not in chart_df.columns:
             chart_df["Chronic_Load"] = chart_df["Trainingsbelasting"].rolling(window=4, min_periods=1).mean()
@@ -471,16 +535,12 @@ else:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED (ROBUUST GESORTEERD) ---
-
-        # --- RECENTE ACTIVITEITEN FEED (ALTIJD DE 3 MEEST RECENTE VAN DE SELECTIE) ---
+        # --- RECENTE ACTIVITEITEN FEED ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            # Zet de lijst om naar een DataFrame zodat we feilloos kunnen sorteren op datum
             df_feed = pd.DataFrame(filtered_activities_list)
 
-            # Zoek de juiste datumnamen
             date_col = None
             for col in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
                 if col in df_feed.columns:
@@ -488,14 +548,11 @@ else:
                     break
 
             if date_col:
-                # Converteer naar datetime en sorteer aflopend (nieuwste bovenaan)
                 df_feed['parsed_date'] = pd.to_datetime(df_feed[date_col], errors='coerce')
                 df_feed = df_feed.sort_values(by='parsed_date', ascending=False)
             else:
-                # Geen datakolom gevonden? Draai de lijst om zodat de achterkant (recentste) bovenaan komt
                 df_feed = df_feed.iloc[::-1]
 
-            # Pak nu de eerste 3 (wat door de sortering de meest recente zijn)
             for _, act in df_feed.head(3).iterrows():
                 act_label = str(act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training')))))
 
@@ -513,22 +570,23 @@ else:
                 act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
 
                 st.markdown(f"""
-                            <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
-                                    <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
-                                </div>
-                                <div style="text-align: right;">
-                                    <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
-                                    <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
-                                </div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                    <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
+                            <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
+                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
         if weekly_details:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
                 df_details = pd.DataFrame(weekly_details)
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
+
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
         st.markdown(
@@ -559,9 +617,7 @@ else:
             cals = selected_act['calories']
             duration = selected_act['time_mins']
             name_lower = selected_act['name'].lower()
-            cals_per_min = cals / duration if duration > 0 else 10
 
-            # Herstelgrenzen op basis van de berekende Session Score (SS) en kenmerken
             session_score_val = selected_act['load']
 
             if any(k in name_lower for k in
@@ -611,153 +667,38 @@ else:
                     {
                         "title": "Power Haver-Kwark Bowl met Rood Fruit",
                         "kcal": 550, "carbs": 70, "protein": 35,
-                        "ingredients": [
-                            "70g havermout",
-                            "200g magere kwark",
-                            "1 banaan",
-                            "Handje blauwe bessen",
-                            "1 el chiazaad",
-                            "Scheutje honing"
-                        ],
-                        "steps": [
-                            "Meng de havermout met de kwark en een scheutje water of melk.",
-                            "Snijd de banaan in plakjes en verdeel samen met het rode fruit, chiazaad en de honing over de bowl."
-                        ]
+                        "ingredients": ["70g havermout", "200g magere kwark", "1 banaan", "Handje blauwe bessen",
+                                        "1 el chiazaad", "Scheutje honing"],
+                        "steps": ["Meng de havermout met de kwark en een scheutje water of melk.",
+                                  "Snijd de banaan in plakjes en verdeel samen met het rode fruit, chiazaad en de honing over de bowl."]
                     },
                     {
                         "title": "Volkoren Wrap met Tonijn, Avocado & Bonen",
                         "kcal": 650, "carbs": 60, "protein": 40,
-                        "ingredients": [
-                            "2 volkoren wraps",
-                            "1 blikje tonijn (op water)",
-                            "1/2 avocado",
-                            "50g kidneybonen",
-                            "Sla en komkommer",
-                            "Yoghurt-knoflookdressing"
-                        ],
-                        "steps": [
-                            "Prak de avocado en meng met de uitgelekte tonijn en kidneybonen.",
-                            "Leg sla op de wraps, verdeel het tonijnmengsel erover, voeg komkommer toe en rol strak op."
-                        ]
-                    },
-                    {
-                        "title": "Gezonde Pasta Bolognese met Rundergehakt & Champignons",
-                        "kcal": 750, "carbs": 85, "protein": 45,
-                        "ingredients": [
-                            "90g volkoren spaghetti",
-                            "130g mager rundergehakt",
-                            "150g champignons",
-                            "1 ui & 2 knoflookteentjes",
-                            "200ml passata (gezeefde tomaten)",
-                            "Italiaanse kruiden"
-                        ],
-                        "steps": [
-                            "Kook de pasta volgens de aanwijzingen op de verpakking.",
-                            "Fruit de ui en knoflook, bak het gehakt rul en bak de champignons mee.",
-                            "Voeg de passata en kruiden toe, laat kort pruttelen en serveer over de pasta."
-                        ]
-                    },
-                    {
-                        "title": "Rijstwafels met Pindakaas & Banaan",
-                        "kcal": 300, "carbs": 35, "protein": 10,
-                        "ingredients": [
-                            "4 rijstwafels",
-                            "2 el 100% pindakaas",
-                            "1 banaan in plakjes",
-                            "Snufje kaneel"
-                        ],
-                        "steps": [
-                            "Besmeer de rijstwafels rijkelijk met de pindakaas.",
-                            "Leg de plakjes banaan erop en maak af met een snufje kaneel."
-                        ]
+                        "ingredients": ["2 volkoren wraps", "1 blikje tonijn (op water)", "1/2 avocado",
+                                        "50g kidneybonen", "Sla en komkommer", "Yoghurt-knoflookdressing"],
+                        "steps": ["Prak de avocado en meng met de uitgelekte tonijn en kidneybonen.",
+                                  "Leg sla op de wraps, verdeel het tonijnmengsel erover, voeg komkommer toe en rol strak op."]
                     }
                 ],
                 "middel": [
                     {
                         "title": "Proteïne Yoghurt met Cruesli & Appel",
                         "kcal": 420, "carbs": 50, "protein": 30,
-                        "ingredients": [
-                            "250ml Griekse yoghurt 0% of Skyr",
-                            "40g volkoren granen / cruesli",
-                            "1 appel in stukjes",
-                            "Snufje kaneel"
-                        ],
-                        "steps": [
-                            "Schep de Skyr in een mooie kom.",
-                            "Voeg de knapperige granen toe, garneer met de stukjes appel en bestrooi met kaneel."
-                        ]
-                    },
-                    {
-                        "title": "Omelet Wrap met Kipfilet en Spinazie",
-                        "kcal": 480, "carbs": 35, "protein": 38,
-                        "ingredients": [
-                            "2 eieren en een scheutje melk",
-                            "Handje verse spinazie",
-                            "70g kipfilet plakjes",
-                            "1 volkoren wrap of boterham"
-                        ],
-                        "steps": [
-                            "Klop de eieren los en bak een dunne omelet in de pan met de spinazie erdoor.",
-                            "Leg de omelet op de wrap of serveer samen met de kipfilet."
-                        ]
-                    },
-                    {
-                        "title": "Wokschotel met Kip, Noedels & Oosterse Groenten",
-                        "kcal": 580, "carbs": 65, "protein": 35,
-                        "ingredients": [
-                            "75g volkoren noedels of mie",
-                            "120g kipfilet reepjes",
-                            "200g wokgroenten",
-                            "2 el sojasaus, gemberpoeder & 1 tl sesamolie"
-                        ],
-                        "steps": [
-                            "Kook de noedels volgens de aanwijzingen.",
-                            "Bak de kip in de wokpan en voeg de wokgroenten toe.",
-                            "Voeg de noedels, sojasaus en sesamolie toe en wok het geheel nog 2 minuten door."
-                        ]
+                        "ingredients": ["250ml Griekse yoghurt 0% of Skyr", "40g volkoren granen / cruesli",
+                                        "1 appel in stukjes", "Snufje kaneel"],
+                        "steps": ["Schep de Skyr in een mooie kom.",
+                                  "Voeg de knapperige granen toe, garneer met de stukjes appel en bestrooi met kaneel."]
                     }
                 ],
                 "licht": [
                     {
                         "title": "Lichte Smoothie van Rood Fruit & Kwark",
                         "kcal": 300, "carbs": 40, "protein": 22,
-                        "ingredients": [
-                            "150g diepvries rood fruit",
-                            "150ml magere kwark",
-                            "100ml water of amandelmelk"
-                        ],
-                        "steps": [
-                            "Voeg alle ingrediënten toe aan een blender.",
-                            "Blend tot een gladde, frisse en lichte herstelsmoothie."
-                        ]
-                    },
-                    {
-                        "title": "Volkoren Boterhammen met Hüttenkäse & Komkommer",
-                        "kcal": 350, "carbs": 35, "protein": 25,
-                        "ingredients": [
-                            "3 volkoren boterhammen",
-                            "100g hüttenkäse",
-                            "Halve komkommer in plakjes",
-                            "Peper en zout naar smaak"
-                        ],
-                        "steps": [
-                            "Besmeer de sneetjes brood met een royale laag hüttenkäse.",
-                            "Beleg met de plakjes komkommer en breng op smaak met peper en zout."
-                        ]
-                    },
-                    {
-                        "title": "Frisse Salade met Quinoa, Feta & Kikkererwten",
-                        "kcal": 450, "carbs": 50, "protein": 20,
-                        "ingredients": [
-                            "65g gekookte quinoa",
-                            "100g kikkererwten (uit blik)",
-                            "40g feta (light)",
-                            "Cherrytomaatjes, komkommer en dressing van olijfolie/citroen"
-                        ],
-                        "steps": [
-                            "Meng de gekookte quinoa met de uitgespoelde kikkererwten en verse groenten.",
-                            "Verkruimel de feta erboven en besprenkel met de frisse dressing."
-                        ]
+                        "ingredients": ["150g diepvries rood fruit", "150ml magere kwark",
+                                        "100ml water of amandelmelk"],
+                        "steps": ["Voeg alle ingrediënten toe aan een blender.",
+                                  "Blend tot een gladde, frisse en lichte herstelsmoothie."]
                     }
                 ]
             }
@@ -768,11 +709,9 @@ else:
                 with st.expander(f"🍽️ {recipe['title']} (ca. {recipe['kcal']} kcal)"):
                     st.markdown(
                         f"**Energie:** ca. **{recipe['kcal']} kcal** | Koolhydraten: ~{recipe['carbs']}g | Eiwitten: ~{recipe['protein']}g")
-
                     st.markdown("**Ingrediënten:**")
                     for ing in recipe['ingredients']:
                         st.markdown(f"- {ing}")
-
                     st.markdown("**Bereidingswijze:**")
                     for s_idx, step in enumerate(recipe['steps'], 1):
                         st.markdown(f"{s_idx}. {step}")
@@ -803,15 +742,9 @@ else:
         elif filtered_activities_list:
             latest_act = filtered_activities_list[0]
             target_cals_fridge = int(latest_act['calories'])
-            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
-            target_protein_fridge = int(st.session_state.body_weight * 0.3)
-
             st.info(
                 f"💡 Geen actieve selectie gevonden; we gebruiken je meest recente activiteit: **{latest_act['name']} ({target_cals_fridge} kcal)**")
         else:
-            target_cals_fridge = 650
-            target_carbs_fridge = int(target_cals_fridge * 0.6 / 4)
-            target_protein_fridge = int(st.session_state.body_weight * 0.3)
             st.warning("⚠️ Geen activiteiten gevonden. Standaard hersteldoel van 650 kcal wordt gebruikt.")
 
         st.markdown("---")
@@ -824,7 +757,6 @@ else:
         )
 
         uploaded_image = None
-
         if input_methode == "Bestand / Fotobibliotheek uploaden":
             uploaded_image = st.file_uploader("Kies een foto uit je bestanden of foto's:", type=["jpg", "jpeg", "png"],
                                               key="fridge_file_uploader")
