@@ -73,10 +73,6 @@ DEFAULT_CLIENT_ID = 284865
 DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
 
 
-# ==============================================================================
-# MODULE: ACTIONABLE COACHING & DOELGERICHTE PERIODISERING
-# ==============================================================================
-
 
 
 # --- HELPERS VOOR VERMOEIDHEIDSBEREKENING ---
@@ -161,7 +157,7 @@ else:
     user_goal = st.sidebar.selectbox(
         "Kies of stel je doel in:",
         [
-            "Sub-2:40 Marathon",
+            "Marathon",
             "Halve Marathon Persoonlijk Record",
             "10 km Persoonlijk Record",
             "5 km Persoonlijk Record",
@@ -411,50 +407,79 @@ else:
         st.markdown("<br>", unsafe_allow_html=True)
 
 
-
-
-        def render_training_schedule_module(user_goal):
+        def render_training_schedule_module(user_goal, activities):
             """
-            Toont een basis weekprogramma op basis van het geselecteerde doel.
+            Toont een dynamisch weekprogramma op basis van geselecteerd doel en Strava geschiedenis.
             """
-            st.subheader(f"📅 Voorbeeld Trainingsschema: {user_goal}")
+            st.subheader(f"📅 Gepersonaliseerd Trainingsschema: {user_goal}")
+
+            # Haal hardloopdata uit Strava
+            runs = [act for act in activities if act["type"] == "Hardlopen" and act["distance"] > 0]
+
+            if not runs:
+                st.warning("Onvoldoende hardloopdata gevonden. Hier is een basisschema:")
+                gem_pace_str = "op gevoel"
+                interval_pace = "vlot"
+                lange_duurloop_km = 10
+                max_dist = 0
+            else:
+                # Bereken gemiddeld tempo en max afstand
+                tot_dist = sum(r["distance"] for r in runs)
+                tot_time = sum(r["time_mins"] for r in runs)
+                gem_pace = tot_time / tot_dist if tot_dist > 0 else 6.0
+
+                gem_pace_min = int(gem_pace)
+                gem_pace_sec = int((gem_pace - gem_pace_min) * 60)
+                gem_pace_str = f"{gem_pace_min}:{gem_pace_sec:02d} min/km"
+
+                # Interval pace (~45 sec sneller dan je gemiddelde loop)
+                int_pace = max(3.0, gem_pace - 0.75)
+                int_pace_min = int(int_pace)
+                int_pace_sec = int((int_pace - int_pace_min) * 60)
+                interval_pace = f"{int_pace_min}:{int_pace_sec:02d} min/km"
+
+                # Lange duurloop afstemmen op je langste recente run (maximaal 10% opbouw per keer)
+                max_dist = max(r["distance"] for r in runs)
+                lange_duurloop_km = round(max_dist * 1.1, 1)
+
             st.markdown(
-                "Heb je nog geen vast schema? Gebruik deze richtlijn als weekstructuur op basis van je gekozen doel:")
+                f"**Jouw Strava Profiel:** Gemiddeld tempo ~**{gem_pace_str}** | Huidige max afstand ~**{round(max_dist, 1)} km**")
+            st.markdown("Op basis hiervan ziet je ideale opbouwweek er als volgt uit:")
 
             if "5 km" in user_goal:
-                st.markdown("""
-                * **Dinsdag (Interval):** 6x 400m op 5k-tempo (met 90 sec wandel/drafpauze)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min op drempeltempo (vlot maar gecontroleerd), 10 min uitlopen
+                st.markdown(f"""
+                * **Dinsdag (Interval):** 6x 400m op {interval_pace} (met 90 sec wandel/drafpauze)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min rond {gem_pace_str}, 10 min uitlopen
                 * **Zaterdag (Herstelloop):** 30 min heel rustig (Zone 1/2)
-                * **Zondag (Duurloop):** 45-60 min ontspannen duurloop
+                * **Zondag (Duurloop):** {min(8.0, lange_duurloop_km)} km ontspannen duurloop
                 """)
             elif "10 km" in user_goal:
-                st.markdown("""
-                * **Dinsdag (Interval):** 5x 1000m op 10k-tempo (2 min wandel/drafpauze)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 20 min vlot duurtempo, 10 min uitlopen
+                st.markdown(f"""
+                * **Dinsdag (Interval):** 5x 1000m rond {interval_pace} (2 min wandel/drafpauze)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 20-25 min rond {gem_pace_str}, 10 min uitlopen
                 * **Zaterdag (Herstelloop):** 35 min rustig
-                * **Zondag (Lange Duurloop):** 60-75 min gestaag duurtempo
+                * **Zondag (Lange Duurloop):** {min(14.0, max(8.0, lange_duurloop_km))} km gestaag duurtempo
                 """)
             elif "Halve Marathon" in user_goal:
-                st.markdown("""
-                * **Dinsdag (Interval/Blokken):** 3x 2000m op Halve Marathon tempo (3 min pauze)
-                * **Donderdag (Tempoloop):** 30 min vlot op race-tempo
+                st.markdown(f"""
+                * **Dinsdag (Interval/Blokken):** 3x 2000m rond {interval_pace} (3 min pauze)
+                * **Donderdag (Tempoloop):** 30-40 min vlot
                 * **Zaterdag (Herstelloop):** 40 min rustige duurloop
-                * **Zondag (Lange Duurloop):** 12 tot 16 km rustig opbouwend
+                * **Zondag (Lange Duurloop):** {min(21.1, max(12.0, lange_duurloop_km))} km rustig opbouwend
                 """)
             elif "Marathon" in user_goal:
-                st.markdown("""
-                * **Dinsdag (Interval/Drempel):** 4x 3000m op Marathon/Halve Marathon tempo (1 km herstel)
+                st.markdown(f"""
+                * **Dinsdag (Interval/Drempel):** 4x 3000m rond {gem_pace_str} (1 km herstel)
                 * **Woensdag (Herstelloop):** 45-50 min rustig
-                * **Donderdag (Marathon Tempo):** 10-14 km op beoogd marathontempo
+                * **Donderdag (Marathon Tempo):** 10-14 km op je beoogde doeltempo
                 * **Zaterdag (Herstelloop):** 40 min heel rustig
-                * **Zondag (Lange Duurloop):** 22 tot 30 km (stabiel Zone 2 / rustig)
+                * **Zondag (Lange Duurloop):** {min(32.0, max(15.0, lange_duurloop_km))} km (rustiger dan {gem_pace_str})
                 """)
             else:
-                st.markdown("""
-                * **Dinsdag:** 30-40 min vlot / wisselduurloop op gevoel
-                * **Donderdag:** 30-45 min rustige duurloop
-                * **Zondag:** 50-60 min ontspannen lange duurloop
+                st.markdown(f"""
+                * **Dinsdag:** 30-40 min wisselduurloop
+                * **Donderdag:** 30-45 min rustig
+                * **Zondag:** {min(15.0, lange_duurloop_km)} km ontspannen duurloop
                 """)
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -563,7 +588,7 @@ else:
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
 
     with tab_schema:
-        render_training_schedule_module(user_goal)
+        render_training_schedule_module(user_goal, filtered_activities_list)
 
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
