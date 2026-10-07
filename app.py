@@ -435,9 +435,9 @@ else:
                 st.markdown("### Hoe wordt dit berekend?")
                 st.markdown("""
                 * **Acute Load (7 dagen):** Jouw trainingsbelasting van de afgelopen week.
-                * **Chronic Load (42 dagen):** Je langetermijnfitheid (belastbaarheid).
-                * **ACWR:** De verhouding `Acute / Chronic`. 
-                * **Optimal Sweet Spot:** De groene band beweegt mee met je fitheid (tussen 0.8x en 1.3x je Chronic Load) voor veilige progressie.
+                * **Chronische Load (42 dagen):** Je langetermijnfitheid (belastbaarheid).
+                * **ACWR:** De verhouding tussen Acute en Chronisch`. 
+                * **Optimal Sweet Spot:** De groene band beweegt mee met je fitheid voor veilige progressie.
                 """)
 
         fig = px.line(chart_df, x="Datum", y="Trainingsbelasting")
