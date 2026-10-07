@@ -73,8 +73,6 @@ DEFAULT_CLIENT_ID = 284865
 DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
 
 
-
-
 # --- HELPERS VOOR VERMOEIDHEIDSBEREKENING ---
 def bereken_hr_load(zones_tijden):
     weegfactoren = [1.0, 2.0, 3.0, 4.5, 7.0]
@@ -153,19 +151,6 @@ else:
         ["Alle activiteiten", "Hardloop activiteiten", "Fiets activiteiten"]
     )
 
-    st.sidebar.markdown("### 🏆 Trainingsdoel Instellen")
-    user_goal = st.sidebar.selectbox(
-        "Kies of stel je doel in:",
-        [
-            "Marathon",
-            "Halve Marathon Persoonlijk Record",
-            "10 km Persoonlijk Record",
-            "5 km Persoonlijk Record",
-            "Geen vast schema (Train op gevoel)",
-            "Algemene Conditie & Fitheid"
-        ]
-    )
-
     st.sidebar.markdown("### ⚙ Profiel & Instellingen")
 
     max_hr_input = st.sidebar.number_input("Maximale Hartslag (bpm)", min_value=120, max_value=220,
@@ -206,7 +191,7 @@ else:
         now = datetime.datetime.now(datetime.timezone.utc)
         start_date = now - datetime.timedelta(weeks=aantal_weken)
 
-        with st.spinner("Je Strava-activiteiten ophalen... 🏃‍♂🚴‍♂️"):
+        with st.spinner("Je Strava-activiteiten ophalen... 🏃‍♂️🚴‍♂️"):
             activities = list(client.get_activities(after=start_date))
 
         weeks_list = []
@@ -303,7 +288,7 @@ else:
 
         chronic_loads_list = [
             sum([a["load"] for a in parsed_activities if (now - datetime.timedelta(days=w * 7)) > a["datetime"] >= (
-                        now - datetime.timedelta(days=(w + 1) * 7))])
+                    now - datetime.timedelta(days=(w + 1) * 7))])
             for w in range(1, 5)
         ]
         chronic_load = sum(chronic_loads_list) / 4.0 if sum(chronic_loads_list) > 0 else 1.0
@@ -331,8 +316,9 @@ else:
         acute_load, chronic_load = 0.0, 1.0
 
     # --- TABS MAKEN VOOR NAVIGATIE ---
-    tab_acwr, tab_schema, tab_nutrition, tab_fridge = st.tabs(
-        ["📊 Belasting", "📅 Trainingsschema", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
+    tab_acwr, tab_nutrition, tab_fridge = st.tabs(
+        ["📊 Belasting", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
+
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
@@ -403,143 +389,6 @@ else:
                     <div style="font-size: 11px; color: {text_sub};">Doel: 0.8 - 1.3</div>
                 </div>
             """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-
-        def render_training_schedule_module(user_goal, activities):
-            """
-            Toont een dynamisch weekprogramma afgestemd op de gekozen afstand en recente Strava-prestaties (afgelopen 30d).
-            """
-            st.subheader(f"📅 Gepersonaliseerd Trainingsschema: {user_goal}")
-
-            # 1. Filter uitsluitend op recente hardloopsessies van de afgelopen 30 dagen
-            now_tz = datetime.datetime.now(datetime.timezone.utc)
-            recent_cutoff = now_tz - datetime.timedelta(days=30)
-
-            recent_runs = [
-                act for act in activities
-                if act.get("type") == "Hardlopen"
-                   and act.get("distance", 0) > 0
-                   and act.get("datetime") >= recent_cutoff
-            ]
-
-            # Fallback als er in de afgelopen 30 dagen geen runs staan
-            if not recent_runs:
-                recent_runs = [act for act in activities if
-                               act.get("type") == "Hardlopen" and act.get("distance", 0) > 0]
-
-            if not recent_runs:
-                st.warning("Onvoldoende hardloopdata gevonden op Strava. Hier is een algemene richtlijn:")
-                st.markdown("""
-                * **Dinsdag:** Interval / Drempeltraining
-                * **Donderdag:** Tempoloop
-                * **Zondag:** Rustige lange duurloop
-                """)
-                return
-
-            # 2. Bereken tempo per run (min/km) en scheid snelle (kwaliteit) vs rustige (duur) runs
-            run_data = []
-            for r in recent_runs:
-                dist = r["distance"]
-                pace = r["time_mins"] / dist  # min/km
-                run_data.append({"dist": dist, "pace": pace})
-
-            # Sorteer op tempo (snelste eerst)
-            run_data_sorted = sorted(run_data, key=lambda x: x["pace"])
-
-            # Snelle runs (top 25%) vs Rustige duurlopen (traagste 50%)
-            fast_cutoff_idx = max(1, int(len(run_data_sorted) * 0.25))
-            slow_start_idx = int(len(run_data_sorted) * 0.5)
-
-            fast_pace = sum(r["pace"] for r in run_data_sorted[:fast_cutoff_idx]) / fast_cutoff_idx
-            easy_pace = sum(r["pace"] for r in run_data_sorted[slow_start_idx:]) / len(
-                run_data_sorted[slow_start_idx:]) if len(run_data_sorted[slow_start_idx:]) > 0 else fast_pace * 1.25
-
-            # Recente maximale afstand (afgelopen 30 dagen)
-            recent_max_dist = max(r["distance"] for r in recent_runs)
-
-            # Hulpfunctie om decimalen om te zetten naar "m:ss min/km"
-            def format_pace(p_val):
-                m = int(p_val)
-                s = int(round((p_val - m) * 60))
-                if s >= 60:
-                    m += 1
-                    s -= 60
-                return f"{m}:{s:02d} min/km"
-
-            # 3. Genereer doelspecifieke schema's en pacing
-            if "5 km" in user_goal:
-                p_interval = format_pace(fast_pace)
-                p_tempo = format_pace(fast_pace + 0.20)
-                p_easy = format_pace(easy_pace)
-                lange_duurloop = min(10.0, round(max(6.0, recent_max_dist * 1.05), 1))
-
-                st.markdown(
-                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
-                st.markdown(f"""
-                * **Dinsdag (5k Interval):** 6x 400m op **{p_interval}** (90 sec herstel)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min op **{p_tempo}**, 10 min uitlopen
-                * **Zaterdag (Herstelloop):** 30 min herstelloop rond **{p_easy}**
-                * **Zondag (Duurloop):** **{lange_duurloop} km** ontspannen duurloop rond **{p_easy}**
-                """)
-
-            elif "10 km" in user_goal:
-                p_interval = format_pace(fast_pace)
-                p_tempo = format_pace(fast_pace + 0.30)
-                p_easy = format_pace(easy_pace)
-                lange_duurloop = min(15.0, round(max(8.0, recent_max_dist * 1.1), 1))
-
-                st.markdown(
-                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
-                st.markdown(f"""
-                * **Dinsdag (10k Interval):** 5x 1000m op **{p_interval}** (2 min herstel)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 20-25 min op **{p_tempo}**, 10 min uitlopen
-                * **Zaterdag (Herstelloop):** 35 min herstelloop rond **{p_easy}**
-                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** gestaag rond **{p_easy}**
-                """)
-
-            elif "Halve Marathon" in user_goal:
-                p_interval = format_pace(fast_pace)
-                p_tempo = format_pace(fast_pace + 0.45)
-                p_easy = format_pace(easy_pace)
-                lange_duurloop = min(21.1, round(max(10.0, recent_max_dist * 1.1), 1))
-
-                st.markdown(
-                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
-                st.markdown(f"""
-                * **Dinsdag (Drempel-interval):** 3x 2000m op **{p_interval}** (3 min herstel)
-                * **Donderdag (HM Tempoloop):** 30-40 min op **{p_tempo}**
-                * **Zaterdag (Herstelloop):** 40 min herstelloop rond **{p_easy}**
-                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** rustig opbouwend rond **{p_easy}**
-                """)
-
-            elif "Marathon" in user_goal:
-                p_interval = format_pace(fast_pace)
-                p_marathon = format_pace(fast_pace + 0.60)
-                p_easy = format_pace(easy_pace)
-                lange_duurloop = min(32.0, round(max(14.0, recent_max_dist * 1.1), 1))
-
-                st.markdown(
-                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
-                st.markdown(f"""
-                * **Dinsdag (Drempelwerk):** 4x 3000m op **{p_interval}** (1 km herstel op {p_easy})
-                * **Woensdag (Herstelloop):** 45 min rustig rond **{p_easy}**
-                * **Donderdag (Marathon Tempo):** 10-14 km op beoogd marathontempo **{p_marathon}**
-                * **Zaterdag (Herstelloop):** 40 min heel rustig rond **{p_easy}**
-                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** duurloop rond **{p_easy}**
-                """)
-
-            else:
-                p_easy = format_pace(easy_pace)
-                lange_duurloop = min(15.0, round(max(8.0, recent_max_dist * 1.05), 1))
-                st.markdown(
-                    f"**Jouw Recente Profiel (afgelopen 30d):** Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
-                st.markdown(f"""
-                * **Dinsdag:** 30-40 min wisselduurloop op gevoel
-                * **Donderdag:** 30-45 min rustig rond **{p_easy}**
-                * **Zondag:** **{lange_duurloop} km** ontspannen duurloop rond **{p_easy}**
-                """)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -645,9 +494,6 @@ else:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
                 df_details = pd.DataFrame(weekly_details)
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
-
-    with tab_schema:
-        render_training_schedule_module(user_goal, filtered_activities_list)
 
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
