@@ -350,7 +350,7 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        # --- VERBETERDE, MINDER AFSTANDELIJKE STATUS ---
+        # --- FYSIOLOGISCHE STATUS ---
         st.markdown("### ⚡ Jouw Fysiologische Status")
 
         if acwr < 0.8:
@@ -374,7 +374,6 @@ else:
             status_bg = "#fef2f2"
             status_desc = "Tijd voor een verplichte rustdag. Je vraagt te veel van je herstelcapaciteit op dit moment."
 
-        # Sfeervollere container met zachtere schaduw en afronding
         st.markdown(f"""
             <div style="background-color: {status_bg}; border-left: 6px solid {status_color}; padding: 18px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
                 <h4 style="margin: 0; color: {status_color}; font-size: 18px;">{status_title}</h4>
@@ -382,7 +381,6 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # Metriek kolommen
         col1, col2, col3 = st.columns(3)
         col1.metric("🔥 Acute Load (7d)", f"{round(acute_load, 1)}", help="Jouw vermoeidheid van de afgelopen week.")
         col2.metric("🛡️ Chronic Load (42d)", f"{round(chronic_load, 1)}", help="Jouw solide fitheidsbasis.")
@@ -390,13 +388,10 @@ else:
 
         st.markdown("---")
 
-        # --- DYNAMISCHE SWEET SPOT BEREKENING VOOR DE GRAFIEK ---
-        # Zorg dat we een Chronic Load schatting per punt hebben in de chart_df om de band te laten bewegen
+        # --- GRAFIEK MET SCHONERE CORRIDOR (ZONDER RODE RANDEN) ---
         if "Chronic_Load" not in chart_df.columns:
-            # Als fallback berekenen we een lopend gemiddelde voor de visualisatie als de kolom mist
             chart_df["Chronic_Load"] = chart_df["Trainingsbelasting"].rolling(window=4, min_periods=1).mean()
 
-        # De veilige ACWR band ligt globaal tussen 0.8 en 1.3 van de Chronic Load
         chart_df["Sweet_Low"] = chart_df["Chronic_Load"] * 0.8
         chart_df["Sweet_High"] = chart_df["Chronic_Load"] * 1.3
 
@@ -405,17 +400,17 @@ else:
             st.subheader("📈 Trainingsbelasting & Bewegende Sweet Spot")
         with col_info:
             with st.popover("ℹ️ Uitleg"):
-                st.markdown("### De bewegende zone")
-                st.markdown(
-                    "De groene band beweegt automatisch mee met je fitheid (Chronic Load). Blijf je binnen deze band, dan train je optimaal richting je piek.")
+                st.markdown("### Hoe wordt dit berekend?")
+                st.markdown("""
+                * **Acute Load (7 dagen):** Meet je recente vermoeidheid en trainingsbelasting van de afgelopen week.
+                * **Chronic Load (42 dagen):** Meet je langetermijnfitheid (je belastbaarheid).
+                * **ACWR (Acute-to-Chronic Workload Ratio):** De deling `Acute Load / Chronic Load`.
+                * **De Sweet Spot:** Lijnspecductie waarbij je ACWR tussen **0.8 en 1.3** blijft. Dit is de ideale zone om progressie te boeken zonder blessures op te lopen. De groene band ademt automatisch mee met je fitheid!
+                """)
 
-        # Bouw de Plotly grafiek met dynamische corridor
-        fig = px.line(
-            chart_df, x="Datum", y="Trainingsbelasting",
-            labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
-        )
+        fig = px.line(chart_df, x="Datum", y="Trainingsbelasting")
 
-        # Voeg de bewegende onder- en bovengrens toe als gevulde band (corridor)
+        # Voeg de sweet spot band toe ZONDER zichtbare lijnen eromheen (line_width=0)
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_High"],
             mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'
@@ -423,13 +418,10 @@ else:
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_Low"],
             mode='lines', line=dict(width=0), fill='tonexty',
-            fillcolor='rgba(16, 185, 129, 0.15)', name='Optimal Sweet Spot', hoverinfo='skip'
+            fillcolor='rgba(16, 185, 129, 0.18)', name='Optimal Sweet Spot', hoverinfo='skip'
         )
 
-        # Lijn van de werkelijke belasting eroverheen leggen
-        fig.update_traces(line_color="#FF334B", line_width=3)
-
-        # Voeg markers toe aan de hoofdlijn
+        # Voeg alleen de werkelijke trainingsbelasting lijn toe met duidelijke punten
         fig.add_trace(px.line(chart_df, x="Datum", y="Trainingsbelasting", markers=True).data[0])
         fig.data[-1].line.color = "#FF334B"
         fig.data[-1].line.width = 3
@@ -445,7 +437,7 @@ else:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED ("STRAVA STYLE") ---
+        # --- RECENTE ACTIVITEITEN FEED ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Trainingen")
             for act in filtered_activities_list[:3]:
