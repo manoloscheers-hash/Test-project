@@ -473,35 +473,36 @@ else:
 
         # --- RECENTE ACTIVITEITEN FEED (ROBUUST GESORTEERD) ---
 
-        # --- RECENTE ACTIVITEITEN FEED (ALTIJD DE LAATSTE 3 VAN DE HELE HISTORIE) ---
-        # We gebruiken hier de totale dataset (bijv. 'df') zodat je altijd de echte meest recente trainingen ziet,
-        # los van welke week of filter je geselecteerd hebt in de app.
-        source_data = df.to_dict('records') if 'df' in locals() and isinstance(df,
-                                                                               pd.DataFrame) else filtered_activities_list
-
-        if source_data:
+        # --- RECENTE ACTIVITEITEN FEED (ALTIJD DE 3 MEEST RECENTE VAN DE SELECTIE) ---
+        if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            # Sorteer feilloos van nieuw naar oud (nieuwste bovenaan)
-            sorted_activities = sorted(
-                source_data,
-                key=lambda x: pd.to_datetime(str(x.get('Datum', x.get('date', x.get('start_date', '1970-01-01')))),
-                                             errors='coerce'),
-                reverse=True
-            )
+            # Zet de lijst om naar een DataFrame zodat we feilloos kunnen sorteren op datum
+            df_feed = pd.DataFrame(filtered_activities_list)
 
-            for act in sorted_activities[:3]:
+            # Zoek de juiste datumnamen
+            date_col = None
+            for col in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
+                if col in df_feed.columns:
+                    date_col = col
+                    break
+
+            if date_col:
+                # Converteer naar datetime en sorteer aflopend (nieuwste bovenaan)
+                df_feed['parsed_date'] = pd.to_datetime(df_feed[date_col], errors='coerce')
+                df_feed = df_feed.sort_values(by='parsed_date', ascending=False)
+            else:
+                # Geen datakolom gevonden? Draai de lijst om zodat de achterkant (recentste) bovenaan komt
+                df_feed = df_feed.iloc[::-1]
+
+            # Pak nu de eerste 3 (wat door de sortering de meest recente zijn)
+            for _, act in df_feed.head(3).iterrows():
                 act_label = str(act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training')))))
 
                 act_date = None
-                for key in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
-                    if key in act and act[key]:
-                        parsed_d = pd.to_datetime(str(act[key]), errors='coerce')
-                        if not pd.isna(parsed_d):
-                            act_date = parsed_d.strftime('%d-%m-%Y')
-                            break
-
-                if not act_date:
+                if date_col and pd.notna(act.get('parsed_date')):
+                    act_date = pd.to_datetime(act['parsed_date']).strftime('%d-%m-%Y')
+                else:
                     import re
 
                     match = re.search(r'\d{2}-\d{2}-\d{4}', act_label)
@@ -512,17 +513,17 @@ else:
                 act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
 
                 st.markdown(f"""
-                                    <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                        <div>
-                                            <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
-                                            <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
-                                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
-                                        </div>
-                                    </div>
-                                """, unsafe_allow_html=True)
+                            <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
+                                    <span style="font-size: 12px; color: {text_sub};">📅 {act_date} &nbsp;•&nbsp; ⏱️ {act_mins} min &nbsp;•&nbsp; 🔥 {act_cals} kcal</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 10px; color: {text_sub}; text-transform: uppercase; display: block; font-weight: 600;">Score</span>
+                                    <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act_load}</span>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
 
         if weekly_details:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
