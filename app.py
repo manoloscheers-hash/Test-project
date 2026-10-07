@@ -473,47 +473,45 @@ else:
 
         # --- RECENTE ACTIVITEITEN FEED (ROBUUST GESORTEERD) ---
 
+        # --- RECENTE ACTIVITEITEN FEED (ALTIJD DE LAATSTE 3 VAN DE HELE HISTORIE) ---
+        # We gebruiken hier de totale dataset (bijv. 'df') zodat je altijd de echte meest recente trainingen ziet,
+        # los van welke week of filter je geselecteerd hebt in de app.
+        source_data = df.to_dict('records') if 'df' in locals() and isinstance(df,
+                                                                               pd.DataFrame) else filtered_activities_list
 
-                # --- RECENTE ACTIVITEITEN FEED (MET SLIMME DATUM-EXTRACTIE) ---
-        if filtered_activities_list:
-                    st.subheader("⚡ Recente Activiteiten")
+        if source_data:
+            st.subheader("⚡ Recente Activiteiten")
 
-                    # Sorteer op datum
-                    sorted_activities = sorted(
-                        filtered_activities_list,
-                        key=lambda x: pd.to_datetime(
-                            str(x.get('Datum', x.get('date', x.get('start_date', '1970-01-01')))), errors='coerce'),
-                        reverse=True
-                    )
+            # Sorteer feilloos van nieuw naar oud (nieuwste bovenaan)
+            sorted_activities = sorted(
+                source_data,
+                key=lambda x: pd.to_datetime(str(x.get('Datum', x.get('date', x.get('start_date', '1970-01-01')))),
+                                             errors='coerce'),
+                reverse=True
+            )
 
-                    for act in sorted_activities[:3]:
-                        # Zoek de juiste label/titel
-                        act_label = str(
-                            act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training')))))
+            for act in sorted_activities[:3]:
+                act_label = str(act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training')))))
 
-                        # Probeer datum te vinden uit bekende sleutels, anders halen we hem uit de titel (bijv. '08-10-2025 - Duurloopje')
-                        act_date = None
-                        for key in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
-                            if key in act and act[key]:
-                                parsed_d = pd.to_datetime(str(act[key]), errors='coerce')
-                                if not pd.isna(parsed_d):
-                                    act_date = parsed_d.strftime('%d-%m-%Y')
-                                    break
+                act_date = None
+                for key in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
+                    if key in act and act[key]:
+                        parsed_d = pd.to_datetime(str(act[key]), errors='coerce')
+                        if not pd.isna(parsed_d):
+                            act_date = parsed_d.strftime('%d-%m-%Y')
+                            break
 
-                        if not act_date:
-                            # Fallback: probeer datum uit de titel te parsen (bijv. dd-mm-jjjj vooraan)
-                            import re
-                            match = re.search(r'\d{2}-\d{2}-\d{4}', act_label)
-                            if match:
-                                act_date = match.group(0)
-                            else:
-                                act_date = "Onbekend"
+                if not act_date:
+                    import re
 
-                        act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
-                        act_cals = act.get('calories', act.get('Calories', 0))
-                        act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
+                    match = re.search(r'\d{2}-\d{2}-\d{4}', act_label)
+                    act_date = match.group(0) if match else "Onbekend"
 
-                        st.markdown(f"""
+                act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
+                act_cals = act.get('calories', act.get('Calories', 0))
+                act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
+
+                st.markdown(f"""
                                     <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                                         <div>
                                             <span style="font-weight: 600; font-size: 14px; color: {text_main};">{act_label}</span><br>
