@@ -471,23 +471,35 @@ else:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED (CHRONOLOGISCH GESORTEERD) ---
+        # --- RECENTE ACTIVITEITEN FEED (ROBUUST GESORTEERD) ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            # Sorteer direct op datum (nieuwste eerst) met veilige datetime conversie
+
+            # Hulpfunctie om de datum uit verschillende mogelijke keys te halen
+            def get_act_date(item):
+                for key in ['Datum', 'date', 'Date', 'DATUM']:
+                    if key in item and item[key]:
+                        parsed = pd.to_datetime(str(item[key]), errors='coerce')
+                        if not pd.isna(parsed):
+                            return parsed
+                return pd.Timestamp.min
+
+
+            # Sorteer aflopend op de gevonden geldige datum (nieuwste bovenaan)
             sorted_activities = sorted(
                 filtered_activities_list,
-                key=lambda x: pd.to_datetime(str(x.get('Datum', '')), errors='coerce'),
+                key=get_act_date,
                 reverse=True
             )
 
             for act in sorted_activities[:3]:
-                act_date = str(act.get('Datum', ''))
-                act_label = act.get('label', 'Training')
-                act_mins = act.get('time_mins', 0)
-                act_cals = act.get('calories', 0)
-                act_load = act.get('load', 0)
+                # Haal waarden flexibel op
+                act_date = str(act.get('Datum', act.get('date', act.get('Date', 'Onbekend'))))
+                act_label = act.get('label', act.get('Name', act.get('name', 'Training')))
+                act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
+                act_cals = act.get('calories', act.get('Calories', 0))
+                act_load = act.get('load', act.get('Training Load', 0))
 
                 st.markdown(f"""
                             <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
