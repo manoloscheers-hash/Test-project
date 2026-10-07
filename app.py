@@ -350,57 +350,98 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        st.subheader("📊 Hoe intensief belast jij jezelf?")
-        st.markdown(
-            "Hier zie je in één oogopslag of je op een veilige manier opbouwt richting je doelen, of dat het risico op overbelasting toeneemt."
-        )
+        # --- VERLIEFST / VERSLAVENDE HOOFDKOP & STATUS ---
+        st.markdown("### ⚡ Jouw Fysiologische Status")
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Korte termijn (Afgelopen 7 dagen)", f"{round(acute_load, 1)}",
-                    help="De totale trainingsbelasting die je de afgelopen week hebt verwerkt (ATL).")
-        col2.metric("Langetermijn (Gemiddelde van 4 weken)", f"{round(chronic_load, 1)}",
-                    help="Je fitheidsbasis: hoeveel belasting je lichaam de afgelopen maand gemiddeld gewend is te dragen (CTL).")
-        col3.metric("Belastingsbalans (Ratio)", f"{round(acwr, 2)}",
-                    help="Verhouding tussen je recente belasting en je basisfitheid (ACWR).")
-
+        # Bepaal statuskleur en tekst voor de "Garmin-style" vibe
         if acwr < 0.8:
-            st.info(
-                "⚠️ **Ondertraining:** Je belasting is vrij laag vergeleken met je baseline. Je kunt de trainingen geleidelijk weer opschroeven.")
+            status_title = "batterij laadt op (Ondertraining)"
+            status_color = "#3b82f6"
+            status_bg = "#eff6ff"
+            status_desc = "Je hebt ruimte om gas te geven! Je belasting ligt onder je baseline."
         elif 0.8 <= acwr <= 1.3:
-            st.success(
-                "🟢 **Optimaal:** Veilige opbouw, perfect voor progressie! Je zit in de 'sweet spot' om fitter te worden.")
+            status_title = "Optimal / Sweet Spot 🟢"
+            status_color = "#10b981"
+            status_bg = "#ecfdf5"
+            status_desc = "Perfecte balans! Je bouwt ijzersterk conditie op zonder overbelasting."
         elif 1.3 < acwr <= 1.5:
-            st.warning(
-                "🟠 **Let op:** Snelle piek in belasting vergeleken met je basis. Bouw tijdelijk wat extra rust in.")
+            status_title = "Vermoeidheid piek 🟠"
+            status_color = "#f59e0b"
+            status_bg = "#fffbeb"
+            status_desc = "Pas op! Je recente belasting stijgt sneller dan je fitheid aankan."
         else:
-            st.error(
-                "🔴 **Hoog risico:** Grote kans op overbelasting! Je vraagt opeens veel meer van je lichaam dan het gewend is.")
+            status_title = "Risico op Overbelasting 🔴"
+            status_color = "#ef4444"
+            status_bg = "#fef2f2"
+            status_desc = "Tijd voor rust! Je vraagt teveel van je herstelcapaciteit."
 
+        # HTML Component voor de "Gamified" Status Banner
+        st.markdown(f"""
+            <div style="background-color: {status_bg}; border-left: 5px solid {status_color}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin: 0; color: {status_color};">Status: {status_title}</h4>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #374151;">{status_desc}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Metriek kolommen met strakke opmaak
+        col1, col2, col3 = st.columns(3)
+        col1.metric("🔥 Acute Load (7d)", f"{round(acute_load, 1)}", help="Jouw vermoeidheid van de afgelopen week.")
+        col2.metric("🛡️ Chronic Load (42d)", f"{round(chronic_load, 1)}", help="Jouw solide fitheidsbasis.")
+        col3.metric("⚖️ ACWR Ratio", f"{round(acwr, 2)}", help="De heilige graal voor blessurepreventie.")
+
+        st.markdown("---")
+
+        # --- VERBETERDE GRAFIEK MET VISUELE SWEET-SPOT ZONES ---
         col_title, col_info = st.columns([6, 1])
         with col_title:
-            st.subheader("📈 Wekelijkse Belasting")
+            st.subheader("📈 Trainingsbelasting & Trend")
         with col_info:
             with st.popover("ℹ️ Uitleg"):
-                st.markdown("### Hoe wordt de belasting berekend?")
+                st.markdown("### De Sweet Spot")
                 st.markdown(
-                    "De trainingsbelasting een fysiologische 3-stappenmodel:\n\n"
-                    "- **HR-Load (Stap 1):** Berekend op basis van intensiteitsfactoren per hartslagzone.\n"
-                    "- **Session Score / SS (Stap 2):** Gecorrigeerd voor sporttype, hoogtemeters ($D^+$ en $D^-$) en cadans.\n"
-                    "- **ACWR (Stap 3):** De verhouding tussen korte-termijn vermoeidheid (ATL) en lange-termijn fitness (CTL)."
-                )
+                    "De blauwe lijn toont je wekelijkse belasting berekend via je hartslagzones en hoogtemeters.")
 
         fig = px.line(
             chart_df, x="Datum", y="Trainingsbelasting", markers=True,
             labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
         )
-        fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
+
+        # Voeg een visuele "Sweet Spot" achtergrondband toe aan de grafiek (tussen 400 en 800 als voorbeeld of op basis van data)
+        fig.add_hrect(
+            y0=400, y1=800,
+            fillcolor="#10b981", opacity=0.1,
+            layer="below", line_width=0,
+            annotation_text="Optimal Sweet Spot Zone", annotation_position="top left"
+        )
+
+        fig.update_traces(line_color="#FF334B", line_width=3, marker=dict(size=8))
+        fig.update_layout(
+            xaxis_type="date",
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=320,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
+        )
         st.plotly_chart(fig, use_container_width=True)
 
-        if weekly_details:
-            st.subheader("📋 Historie per week")
-            df_details = pd.DataFrame(weekly_details)
-            st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
+        # --- RECENTE ACTIVITEITEN "STRAVA-STYLE" FEED ---
+        if filtered_activities_list:
+            st.subheader("⚡ Meest recente trainingen & Session Scores")
 
+            # Toon de laatste 3 trainingen als interactieve "mini-feed" kaarten
+            for act in filtered_activities_list[:3]:
+                with st.container():
+                    st.markdown(f"""
+                        <div style="border: 1px solid rgba(150,150,150,0.2); border-radius: 8px; padding: 10px 15px; margin-bottom: 8px; background-color: rgba(255,255,255,0.02);">
+                            <b>{act['label']}</b><br>
+                            <span style="font-size: 13px; color: gray;">⏱️ {act['time_mins']} min &nbsp;|&nbsp; ⚡ Session Score (SS): <b>{act['load']}</b> &nbsp;|&nbsp; 🔥 {act['calories']} kcal</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+        if weekly_details:
+            with st.expander("📋 Bekijk volledige historische tabel per week"):
+                df_details = pd.DataFrame(weekly_details)
+                st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
         st.markdown(
