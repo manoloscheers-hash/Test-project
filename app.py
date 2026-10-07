@@ -409,77 +409,135 @@ else:
 
         def render_training_schedule_module(user_goal, activities):
             """
-            Toont een dynamisch weekprogramma op basis van geselecteerd doel en Strava geschiedenis.
+            Toont een dynamisch weekprogramma afgestemd op de gekozen afstand en recente Strava-prestaties (afgelopen 30d).
             """
             st.subheader(f"📅 Gepersonaliseerd Trainingsschema: {user_goal}")
 
-            # Haal hardloopdata uit Strava
-            runs = [act for act in activities if act["type"] == "Hardlopen" and act["distance"] > 0]
+            # 1. Filter uitsluitend op recente hardloopsessies van de afgelopen 30 dagen
+            now_tz = datetime.datetime.now(datetime.timezone.utc)
+            recent_cutoff = now_tz - datetime.timedelta(days=30)
 
-            if not runs:
-                st.warning("Onvoldoende hardloopdata gevonden. Hier is een basisschema:")
-                gem_pace_str = "op gevoel"
-                interval_pace = "vlot"
-                lange_duurloop_km = 10
-                max_dist = 0
-            else:
-                # Bereken gemiddeld tempo en max afstand
-                tot_dist = sum(r["distance"] for r in runs)
-                tot_time = sum(r["time_mins"] for r in runs)
-                gem_pace = tot_time / tot_dist if tot_dist > 0 else 6.0
+            recent_runs = [
+                act for act in activities
+                if act.get("type") == "Hardlopen"
+                   and act.get("distance", 0) > 0
+                   and act.get("datetime") >= recent_cutoff
+            ]
 
-                gem_pace_min = int(gem_pace)
-                gem_pace_sec = int((gem_pace - gem_pace_min) * 60)
-                gem_pace_str = f"{gem_pace_min}:{gem_pace_sec:02d} min/km"
+            # Fallback als er in de afgelopen 30 dagen geen runs staan
+            if not recent_runs:
+                recent_runs = [act for act in activities if
+                               act.get("type") == "Hardlopen" and act.get("distance", 0) > 0]
 
-                # Interval pace (~45 sec sneller dan je gemiddelde loop)
-                int_pace = max(3.0, gem_pace - 0.75)
-                int_pace_min = int(int_pace)
-                int_pace_sec = int((int_pace - int_pace_min) * 60)
-                interval_pace = f"{int_pace_min}:{int_pace_sec:02d} min/km"
+            if not recent_runs:
+                st.warning("Onvoldoende hardloopdata gevonden op Strava. Hier is een algemene richtlijn:")
+                st.markdown("""
+                * **Dinsdag:** Interval / Drempeltraining
+                * **Donderdag:** Tempoloop
+                * **Zondag:** Rustige lange duurloop
+                """)
+                return
 
-                # Lange duurloop afstemmen op je langste recente run (maximaal 10% opbouw per keer)
-                max_dist = max(r["distance"] for r in runs)
-                lange_duurloop_km = round(max_dist * 1.1, 1)
+            # 2. Bereken tempo per run (min/km) en scheid snelle (kwaliteit) vs rustige (duur) runs
+            run_data = []
+            for r in recent_runs:
+                pace = r["time_mins"] / r["distance"]  # min/km
+                run_data.append({"dist": r["distance"], "pace": pace})
 
-            st.markdown(
-                f"**Jouw Strava Profiel:** Gemiddeld tempo ~**{gem_pace_str}** | Huidige max afstand ~**{round(max_dist, 1)} km**")
-            st.markdown("Op basis hiervan ziet je ideale opbouwweek er als volgt uit:")
+            # Sorteer op tempo (snelste eerst)
+            run_data_sorted = sorted(run_data, key=lambda x: x["pace"])
 
+            # Snelle runs (top 25%) vs Rustige duurlopen (traagste 50%)
+            fast_cutoff_idx = max(1, int(len(run_data_sorted) * 0.25))
+            slow_start_idx = int(len(run_data_sorted) * 0.5)
+
+            fast_pace = sum(r["pace"] for r in run_data_sorted[:fast_cutoff_idx]) / fast_cutoff_idx
+            easy_pace = sum(r["pace"] for r in run_data_sorted[slow_start_idx:]) / len(
+                run_data_sorted[slow_start_idx:]) if len(run_data_sorted[slow_start_idx:]) > 0 else fast_pace * 1.25
+
+            # Recente maximale afstand (afgelopen 30 dagen)
+            recent_max_dist = max(r["dist"] for r in recent_runs)
+
+            # Hulpfunctie om decimalen om te zetten naar "m:ss min/km"
+            def format_pace(p_val):
+                m = int(p_val)
+                s = int(round((p_val - m) * 60))
+                if s >= 60:
+                    m += 1
+                    s -= 60
+                return f"{m}:{s:02d} min/km"
+
+            # 3. Genereer doelspecifieke schema's en pacing
             if "5 km" in user_goal:
+                p_interval = format_pace(fast_pace)
+                p_tempo = format_pace(fast_pace + 0.20)
+                p_easy = format_pace(easy_pace)
+                lange_duurloop = min(10.0, round(max(6.0, recent_max_dist * 1.05), 1))
+
+                st.markdown(
+                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
                 st.markdown(f"""
-                * **Dinsdag (Interval):** 6x 400m op {interval_pace} (met 90 sec wandel/drafpauze)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min rond {gem_pace_str}, 10 min uitlopen
-                * **Zaterdag (Herstelloop):** 30 min heel rustig (Zone 1/2)
-                * **Zondag (Duurloop):** {min(8.0, lange_duurloop_km)} km ontspannen duurloop
+                * **Dinsdag (5k Interval):** 6x 400m op **{p_interval}** (90 sec herstel)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min op **{p_tempo}**, 10 min uitlopen
+                * **Zaterdag (Herstelloop):** 30 min herstelloop rond **{p_easy}**
+                * **Zondag (Duurloop):** **{lange_duurloop} km** ontspannen duurloop rond **{p_easy}**
                 """)
+
             elif "10 km" in user_goal:
+                p_interval = format_pace(fast_pace)
+                p_tempo = format_pace(fast_pace + 0.30)
+                p_easy = format_pace(easy_pace)
+                lange_duurloop = min(15.0, round(max(8.0, recent_max_dist * 1.1), 1))
+
+                st.markdown(
+                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
                 st.markdown(f"""
-                * **Dinsdag (Interval):** 5x 1000m rond {interval_pace} (2 min wandel/drafpauze)
-                * **Donderdag (Tempoloop):** 15 min inlopen, 20-25 min rond {gem_pace_str}, 10 min uitlopen
-                * **Zaterdag (Herstelloop):** 35 min rustig
-                * **Zondag (Lange Duurloop):** {min(14.0, max(8.0, lange_duurloop_km))} km gestaag duurtempo
+                * **Dinsdag (10k Interval):** 5x 1000m op **{p_interval}** (2 min herstel)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 20-25 min op **{p_tempo}**, 10 min uitlopen
+                * **Zaterdag (Herstelloop):** 35 min herstelloop rond **{p_easy}**
+                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** gestaag rond **{p_easy}**
                 """)
+
             elif "Halve Marathon" in user_goal:
+                p_interval = format_pace(fast_pace)
+                p_tempo = format_pace(fast_pace + 0.45)
+                p_easy = format_pace(easy_pace)
+                lange_duurloop = min(21.1, round(max(10.0, recent_max_dist * 1.1), 1))
+
+                st.markdown(
+                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
                 st.markdown(f"""
-                * **Dinsdag (Interval/Blokken):** 3x 2000m rond {interval_pace} (3 min pauze)
-                * **Donderdag (Tempoloop):** 30-40 min vlot
-                * **Zaterdag (Herstelloop):** 40 min rustige duurloop
-                * **Zondag (Lange Duurloop):** {min(21.1, max(12.0, lange_duurloop_km))} km rustig opbouwend
+                * **Dinsdag (Drempel-interval):** 3x 2000m op **{p_interval}** (3 min herstel)
+                * **Donderdag (HM Tempoloop):** 30-40 min op **{p_tempo}**
+                * **Zaterdag (Herstelloop):** 40 min herstelloop rond **{p_easy}**
+                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** rustig opbouwend rond **{p_easy}**
                 """)
+
             elif "Marathon" in user_goal:
+                p_interval = format_pace(fast_pace)
+                p_marathon = format_pace(fast_pace + 0.60)
+                p_easy = format_pace(easy_pace)
+                lange_duurloop = min(32.0, round(max(14.0, recent_max_dist * 1.1), 1))
+
+                st.markdown(
+                    f"**Jouw Recente Profiel (afgelopen 30d):** Snelle runs ~**{p_interval}** | Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
                 st.markdown(f"""
-                * **Dinsdag (Interval/Drempel):** 4x 3000m rond {gem_pace_str} (1 km herstel)
-                * **Woensdag (Herstelloop):** 45-50 min rustig
-                * **Donderdag (Marathon Tempo):** 10-14 km op je beoogde doeltempo
-                * **Zaterdag (Herstelloop):** 40 min heel rustig
-                * **Zondag (Lange Duurloop):** {min(32.0, max(15.0, lange_duurloop_km))} km (rustiger dan {gem_pace_str})
+                * **Dinsdag (Drempelwerk):** 4x 3000m op **{p_interval}** (1 km herstel op {p_easy})
+                * **Woensdag (Herstelloop):** 45 min rustig rond **{p_easy}**
+                * **Donderdag (Marathon Tempo):** 10-14 km op beoogd marathontempo **{p_marathon}**
+                * **Zaterdag (Herstelloop):** 40 min heel rustig rond **{p_easy}**
+                * **Zondag (Lange Duurloop):** **{lange_duurloop} km** duurloop rond **{p_easy}**
                 """)
+
             else:
+                p_easy = format_pace(easy_pace)
+                lange_duurloop = min(15.0, round(max(8.0, recent_max_dist * 1.05), 1))
+                st.markdown(
+                    f"**Jouw Recente Profiel (afgelopen 30d):** Rustige duurlopen ~**{p_easy}** | Recente max duurloop ~**{round(recent_max_dist, 1)} km**")
                 st.markdown(f"""
-                * **Dinsdag:** 30-40 min wisselduurloop
-                * **Donderdag:** 30-45 min rustig
-                * **Zondag:** {min(15.0, lange_duurloop_km)} km ontspannen duurloop
+                * **Dinsdag:** 30-40 min wisselduurloop op gevoel
+                * **Donderdag:** 30-45 min rustig rond **{p_easy}**
+                * **Zondag:** **{lange_duurloop} km** ontspannen duurloop rond **{p_easy}**
                 """)
 
         st.markdown("<br>", unsafe_allow_html=True)
