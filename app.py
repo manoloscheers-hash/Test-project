@@ -350,45 +350,73 @@ else:
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
-        # --- FYSIOLOGISCHE STATUS ---
-        st.markdown("### ⚡ Jouw Fysiologische Status")
-
+        # --- GARMIN-STYLE STATUS WIDGET ---
         if acwr < 0.8:
-            status_title = "🔋 Je batterij laadt vol op (Opbouwfase)"
+            status_title = "Onderbelast (Opbouwfase)"
             status_color = "#3b82f6"
-            status_bg = "#f0f7ff"
-            status_desc = "Je hebt ruimte om gas te geven! Je belasting ligt onder je baseline, tijd om te vlammen."
+            status_bg = "linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%)"
+            status_desc = "Je zit onder je baseline. Ruimte om gecontroleerd te versnellen!"
         elif 0.8 <= acwr <= 1.3:
-            status_title = "🔥 Lekker bezig! (Optimal Sweet Spot)"
-            status_color = "#059669"
-            status_bg = "#ecfdf5"
-            status_desc = "Perfecte balans. Je bouwt ijzersterke conditie op zonder dat je lichaam over de kop slaat."
+            status_title = "Productief / Sweet Spot"
+            status_color = "#10b981"
+            status_bg = "linear-gradient(135deg, #064e3b 0%, #0f172a 100%)"
+            status_desc = "Optimale balans! Je bouwt maximale conditie op zonder overbelasting."
         elif 1.3 < acwr <= 1.5:
-            status_title = "⚠️ Vermoeidheid piekt (Gas terugnemen?)"
-            status_color = "#d97706"
-            status_bg = "#fffbeb"
-            status_desc = "Pas op! Je recente belasting stijgt sneller dan je fitheid aankan. Houd je herstel in de gaten."
+            status_title = "Piek / Vermoeidheid"
+            status_color = "#f59e0b"
+            status_bg = "linear-gradient(135deg, #78350f 0%, #0f172a 100%)"
+            status_desc = "Hoge belasting. Zorg voor voldoende herstel de komende dagen."
         else:
-            status_title = "🛑 Waarschuwing: Overbelasting risico"
-            status_color = "#dc2626"
-            status_bg = "#fef2f2"
-            status_desc = "Tijd voor een verplichte rustdag. Je vraagt te veel van je herstelcapaciteit op dit moment."
+            status_title = "Risico op Overbelasting"
+            status_color = "#ef4444"
+            status_bg = "linear-gradient(135deg, #7f1d1d 0%, #0f172a 100%)"
+            status_desc = "Pas op! Je riskeert blessures. Las direct een rustperiode in."
 
+        # Moderne sporthorloge-stijl hoofdbanner met gradient
         st.markdown(f"""
-            <div style="background-color: {status_bg}; border-left: 6px solid {status_color}; padding: 18px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                <h4 style="margin: 0; color: {status_color}; font-size: 18px;">{status_title}</h4>
-                <p style="margin: 8px 0 0 0; font-size: 15px; color: #4b5563; line-height: 1.4;">{status_desc}</p>
+            <div style="background: {status_bg}; border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 20px; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 700;">Trainingsstatus</span>
+                    <span style="background-color: {status_color}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">LIVE</span>
+                </div>
+                <h2 style="margin: 8px 0 4px 0; color: #ffffff; font-size: 22px; font-weight: 700;">{status_title}</h2>
+                <p style="margin: 0; font-size: 14px; color: #cbd5e1;">{status_desc}</p>
             </div>
         """, unsafe_allow_html=True)
 
+        # Garmin-style metrische widgets (strakke kaarten met gekleurde accenten)
         col1, col2, col3 = st.columns(3)
-        col1.metric("🔥 Acute Load (7d)", f"{round(acute_load, 1)}", help="Jouw vermoeidheid van de afgelopen week.")
-        col2.metric("🛡️ Chronic Load (42d)", f"{round(chronic_load, 1)}", help="Jouw solide fitheidsbasis.")
-        col3.metric("⚖️ ACWR Ratio", f"{round(acwr, 2)}", help="De verhouding tussen acute en chronische belasting.")
 
-        st.markdown("---")
+        with col1:
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">🔥 Acute Load (7d)</div>
+                    <div style="font-size: 26px; font-weight: 800; color: #f8fafc; margin: 5px 0;">{round(acute_load, 1)}</div>
+                    <div style="font-size: 11px; color: #64748b;">Recente vermoeidheid</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # --- GRAFIEK MET SCHONERE CORRIDOR (ZONDER RODE RANDEN) ---
+        with col2:
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">🛡️ Chronic Load (42d)</div>
+                    <div style="font-size: 26px; font-weight: 800; color: #f8fafc; margin: 5px 0;">{round(chronic_load, 1)}</div>
+                    <div style="font-size: 11px; color: #64748b;">Fitheidsbasis</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        with col3:
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">⚖️ ACWR Ratio</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {status_color}; margin: 5px 0;">{round(acwr, 2)}</div>
+                    <div style="font-size: 11px; color: #64748b;">Doel: 0.8 - 1.3</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # --- GRAFIEK MET DONKERE SPORT-VIBE ---
         if "Chronic_Load" not in chart_df.columns:
             chart_df["Chronic_Load"] = chart_df["Trainingsbelasting"].rolling(window=4, min_periods=1).mean()
 
@@ -402,15 +430,15 @@ else:
             with st.popover("ℹ️ Uitleg"):
                 st.markdown("### Hoe wordt dit berekend?")
                 st.markdown("""
-                * **Acute Load (7 dagen):** Meet je recente vermoeidheid en trainingsbelasting van de afgelopen week.
-                * **Chronic Load (42 dagen):** Meet je langetermijnfitheid (je belastbaarheid).
-                * **ACWR (Acute-to-Chronic Workload Ratio):** De deling tussen Acute Load en Chronic Load.
-                * **De Sweet Spot:** Dit is de ideale zone om progressie te boeken zonder blessures op te lopen.
+                * **Acute Load (7 dagen):** Jouw trainingsbelasting van de afgelopen week.
+                * **Chronic Load (42 dagen):** Je langetermijnfitheid (belastbaarheid).
+                * **ACWR:** De verhouding `Acute / Chronic`. 
+                * **Optimal Sweet Spot:** De groene band beweegt mee met je fitheid (tussen 0.8x en 1.3x je Chronic Load) voor veilige progressie.
                 """)
 
         fig = px.line(chart_df, x="Datum", y="Trainingsbelasting")
 
-        # Voeg de sweet spot band toe ZONDER zichtbare lijnen eromheen (line_width=0)
+        # Sweet spot band zonder randen
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_High"],
             mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'
@@ -418,14 +446,15 @@ else:
         fig.add_scatter(
             x=chart_df["Datum"], y=chart_df["Sweet_Low"],
             mode='lines', line=dict(width=0), fill='tonexty',
-            fillcolor='rgba(16, 185, 129, 0.18)', name='Optimal Sweet Spot', hoverinfo='skip'
+            fillcolor='rgba(16, 185, 129, 0.12)', name='Optimal Sweet Spot', hoverinfo='skip'
         )
 
-        # Voeg alleen de werkelijke trainingsbelasting lijn toe met duidelijke punten
+        # Hoofdlijn in strakke Strava-oranje/rode kleur met markers
         fig.add_trace(px.line(chart_df, x="Datum", y="Trainingsbelasting", markers=True).data[0])
-        fig.data[-1].line.color = "#FF334B"
+        fig.data[-1].line.color = "#FF5500"  # Strava-oranje vibe
         fig.data[-1].line.width = 3
-        fig.data[-1].marker.size = 7
+        fig.data[-1].marker.size = 6
+        fig.data[-1].marker.color = "#FF5500"
 
         fig.update_layout(
             xaxis_type="date",
@@ -433,23 +462,26 @@ else:
             height=340,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#94a3b8"),
+            xaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
+            yaxis=dict(gridcolor="rgba(255,255,255,0.05)", zeroline=False),
             showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED ---
+        # --- STRAVA STYLE RECENTE ACTIVITEITEN FEED ---
         if filtered_activities_list:
-            st.subheader("⚡ Recente Trainingen")
+            st.subheader("⚡ Recente Activiteiten")
             for act in filtered_activities_list[:3]:
                 st.markdown(f"""
-                    <div style="border: 1px solid rgba(150,150,150,0.15); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; background-color: rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <strong style="font-size: 15px; color: #111827;">{act['label']}</strong><br>
-                            <span style="font-size: 13px; color: #6b7280;">⏱️ {act['time_mins']} min &nbsp;|&nbsp; 🔥 {act['calories']} kcal</span>
+                            <span style="font-weight: 600; font-size: 14px; color: #f8fafc;">{act['label']}</span><br>
+                            <span style="font-size: 12px; color: #94a3b8;">⏱️ {act['time_mins']} min &nbsp;•&nbsp; 🔥 {act['calories']} kcal</span>
                         </div>
                         <div style="text-align: right;">
-                            <span style="font-size: 12px; color: #9ca3af; display: block;">Session Score</span>
-                            <span style="font-size: 16px; font-weight: bold; color: #059669;">{act['load']}</span>
+                            <span style="font-size: 10px; color: #64748b; text-transform: uppercase; display: block;">Session Score</span>
+                            <span style="font-size: 15px; font-weight: 700; color: #10b981;">{act['load']}</span>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -458,7 +490,6 @@ else:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
                 df_details = pd.DataFrame(weekly_details)
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
-
 
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
