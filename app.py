@@ -472,21 +472,10 @@ else:
         st.plotly_chart(fig, use_container_width=True)
 
         # --- RECENTE ACTIVITEITEN FEED (ROBUUST GESORTEERD) ---
-        if filtered_activities_list:
-            st.subheader("⚡ Recente Activiteiten")
 
-
-            # Hulpfunctie om de datum uit verschillende mogelijke keys te halen
-            def get_act_date(item):
-                for key in ['Datum', 'date', 'Date', 'DATUM']:
-                    if key in item and item[key]:
-                        parsed = pd.to_datetime(str(item[key]), errors='coerce')
-                        if not pd.isna(parsed):
-                            return parsed
-                return pd.Timestamp.min
 
                 # --- RECENTE ACTIVITEITEN FEED (MET SLIMME DATUM-EXTRACTIE) ---
-            if filtered_activities_list:
+        if filtered_activities_list:
                     st.subheader("⚡ Recente Activiteiten")
 
                     # Sorteer op datum
