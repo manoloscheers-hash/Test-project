@@ -441,8 +441,9 @@ else:
             # 2. Bereken tempo per run (min/km) en scheid snelle (kwaliteit) vs rustige (duur) runs
             run_data = []
             for r in recent_runs:
-                pace = r["time_mins"] / r["distance"]  # min/km
-                run_data.append({"dist": r["distance"], "pace": pace})
+                dist = r["distance"]
+                pace = r["time_mins"] / dist  # min/km
+                run_data.append({"dist": dist, "pace": pace})
 
             # Sorteer op tempo (snelste eerst)
             run_data_sorted = sorted(run_data, key=lambda x: x["pace"])
@@ -456,7 +457,7 @@ else:
                 run_data_sorted[slow_start_idx:]) if len(run_data_sorted[slow_start_idx:]) > 0 else fast_pace * 1.25
 
             # Recente maximale afstand (afgelopen 30 dagen)
-            recent_max_dist = max(r["dist"] for r in recent_runs)
+            recent_max_dist = max(r["distance"] for r in recent_runs)
 
             # Hulpfunctie om decimalen om te zetten naar "m:ss min/km"
             def format_pace(p_val):
