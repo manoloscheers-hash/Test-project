@@ -429,7 +429,7 @@ else:
 
         col_title, col_info = st.columns([6, 1])
         with col_title:
-            st.subheader("📈 Trainingsbelasting & Bewegende Sweet Spot")
+            st.subheader("📈 Trainingsbelasting")
         with col_info:
             with st.popover("ℹ️ Uitleg"):
                 st.markdown("### Hoe wordt dit berekend?")
