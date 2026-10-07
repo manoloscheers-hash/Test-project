@@ -77,102 +77,6 @@ DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
 # MODULE: ACTIONABLE COACHING & DOELGERICHTE PERIODISERING
 # ==============================================================================
 
-def render_actionable_coaching_module(acwr_value, acute_load, chronic_load, card_bg, card_border, text_main, text_sub,
-                                      user_goal):
-    """
-    Genereert helder, direct toepasbaar trainingsadvies op basis van de ACWR
-    en past zich volledig aan op het gekozen doel (bijv. 5km, marathon, of vrij).
-    """
-    st.subheader("🎯 Coach Advies & Doelmonitor")
-
-    # Bepaal het advies op basis van de ACWR waarde en het gekozen doel
-    is_vrij_trainen = ("vrij" in user_goal.lower()) or ("geen vast schema" in user_goal.lower())
-
-    if is_vrij_trainen:
-        if acwr_value < 0.8:
-            status_color = "#3b82f6"
-            status_title = "Luister naar je lichaam: Ruimte voor power"
-            advice = "Je belasting is laag. Je voelt je waarschijnlijk fris en fit genoeg om lekker door te trekken als je daar zin in hebt."
-            action = "👉 **Advies voor vandaag:** Heb je energie? Pak een mooie intensieve prikkel mee op gevoel!"
-        elif 0.8 <= acwr_value <= 1.3:
-            status_color = "#10b981"
-            status_title = "Lekker in de flow"
-            advice = "Je zit in een stabiele, fijne balans. Je conditie houdt zichzelf keurig op peil."
-            action = "👉 **Advies voor vandaag:** Blijf lekker lopen op het ritme dat goed voelt."
-        else:
-            status_color = "#f59e0b"
-            status_title = "Tijd voor wat extra rust"
-            advice = "Je opgebouwde belasting is vrij hoog vergeleken met je recente baseline. Je merkt misschien dat je benen wat zwaarder aanvoelen."
-            action = "👉 **Advies voor vandaag:** Las gerust een extra rustdag of een heel rustig herstelrondje in."
-    else:
-        if acwr_value < 0.8:
-            status_color = "#3b82f6"
-            status_title = "Groen Licht: Ruimte voor intensiteit"
-            advice = f"Je belasting is momenteel aan de lage kant voor je doel ({user_goal}). Ruimte voor een gerichte prikkel."
-            action = "👉 **Advies voor vandaag:** Voeg een kwalitatieve interval- of temposessie toe."
-        elif 0.8 <= acwr_value <= 1.3:
-            status_color = "#10b981"
-            status_title = "Sweet Spot: Perfecte balans"
-            advice = f"Je zit in de ideale opbouwzone richting je doel: {user_goal}."
-            action = "👉 **Advies voor vandaag:** Houd je strak aan je opbouwende trainingsschema."
-        elif 1.3 < acwr_value <= 1.5:
-            status_color = "#f59e0b"
-            status_title = "Waarschuwing: Snelle stijging"
-            advice = "Je belasting stijgt sneller dan je fitheidsbasis kan bijbenen."
-            action = "👉 **Advies voor vandaag:** Overweeg een rustdag om overbelasting te voorkomen."
-        else:
-            status_color = "#ef4444"
-            status_title = "Gevaarlijke Piek: Gas terugnemen!"
-            advice = "Alarmfase! Je ACWR is te hoog voor een veilig verloop van je schema."
-            action = "👉 **Advies voor vandaag:** Neem direct rust of doe uitsluitend actieve hersteltraining."
-
-    # Render de UI kaart voor de gebruiker
-    st.markdown(f"""
-        <div style="background: {card_bg}; border: {card_border}; border-left: 6px solid {status_color}; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-            <h4 style="margin: 0 0 8px 0; color: {text_main};">{status_title}</h4>
-            <p style="margin: 0 0 12px 0; font-size: 14px; color: {text_sub};">{advice}</p>
-            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; font-weight: 600; color: {text_main};">
-                {action}
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # --- DOELGERICHTE CHECK (Op 0 decimalen) ---
-    with st.expander(f"🏁 Voortgang richting doel: {user_goal}"):
-        if "Sub-2:40" in user_goal:
-            st.markdown(f"""
-                * **Streefpace:** ~3:47 min/km
-                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
-                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
-            """)
-            if chronic_load >= 500:
-                st.success("✅ Je fitheidsbasis is solide genoeg om dit volume vast te houden voor een snelle marathon.")
-            else:
-                st.warning(
-                    "⚠️ Je fitheidsbasis is nog wat aan de lage kant voor een sub-2:40 poging. Bouw gestaag uit.")
-        elif "5 km" in user_goal or "10 km" in user_goal:
-            st.markdown(f"""
-                * **Focus:** Snelheid, VO2max en drempelwerk
-                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
-                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
-            """)
-            st.info("💡 Korte, intensieve prikkels en voldoende herstel zijn cruciaal voor een scherpe 5k/10k tijd.")
-        elif "Halve Marathon" in user_goal:
-            st.markdown(f"""
-                * **Focus:** Drempelduurvermogen en tempo-uithoudingsvermogen
-                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
-                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
-            """)
-            st.info(
-                "💡 Zorg voor een gezonde balans tussen langere duurlopen en blokkentraining op halve marathon tempo.")
-        else:
-            st.markdown(f"""
-                * **Focus:** Vrij en flexibel trainen op gevoel
-                * **Huidige Acute Belasting:** {int(round(acute_load, 0))}
-                * **Fitheidsbasis (Chronic Load):** {int(round(chronic_load, 0))}
-            """)
-            st.success(
-                "👍 Je traint zonder strak schema; gebruik deze cijfers puur als indicatie voor je herstel en energie.")
 
 
 # --- HELPERS VOOR VERMOEIDHEIDSBEREKENING ---
@@ -506,9 +410,7 @@ else:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- AANROEP ACTIONABLE COACHING & DOELMODULE ---
-        render_actionable_coaching_module(acwr, acute_load, chronic_load, card_bg, card_border, text_main, text_sub,
-                                          user_goal)
+
 
 
         def render_training_schedule_module(user_goal):
