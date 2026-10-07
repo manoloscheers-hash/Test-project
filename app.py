@@ -485,23 +485,44 @@ else:
                             return parsed
                 return pd.Timestamp.min
 
-                # --- RECENTE ACTIVITEITEN FEED (DIRECT EN ROBUUST) ---
+                # --- RECENTE ACTIVITEITEN FEED (MET SLIMME DATUM-EXTRACTIE) ---
             if filtered_activities_list:
                     st.subheader("⚡ Recente Activiteiten")
 
-                    # Sorteer direct op de datumwaarde uit het object
+                    # Sorteer op datum
                     sorted_activities = sorted(
                         filtered_activities_list,
-                        key=lambda x: pd.to_datetime(str(x.get('Datum', x.get('date', '1970-01-01'))), errors='coerce'),
+                        key=lambda x: pd.to_datetime(
+                            str(x.get('Datum', x.get('date', x.get('start_date', '1970-01-01')))), errors='coerce'),
                         reverse=True
                     )
 
                     for act in sorted_activities[:3]:
-                        act_date = str(act.get('Datum', act.get('date', 'Onbekend')))
-                        act_label = act.get('label', act.get('Name', 'Training'))
-                        act_mins = act.get('time_mins', act.get('Moving Time', 0))
+                        # Zoek de juiste label/titel
+                        act_label = str(
+                            act.get('label', act.get('Name', act.get('name', act.get('titel', 'Training')))))
+
+                        # Probeer datum te vinden uit bekende sleutels, anders halen we hem uit de titel (bijv. '08-10-2025 - Duurloopje')
+                        act_date = None
+                        for key in ['Datum', 'date', 'Date', 'DATUM', 'start_date']:
+                            if key in act and act[key]:
+                                parsed_d = pd.to_datetime(str(act[key]), errors='coerce')
+                                if not pd.isna(parsed_d):
+                                    act_date = parsed_d.strftime('%d-%m-%Y')
+                                    break
+
+                        if not act_date:
+                            # Fallback: probeer datum uit de titel te parsen (bijv. dd-mm-jjjj vooraan)
+                            import re
+                            match = re.search(r'\d{2}-\d{2}-\d{4}', act_label)
+                            if match:
+                                act_date = match.group(0)
+                            else:
+                                act_date = "Onbekend"
+
+                        act_mins = act.get('time_mins', act.get('Moving Time', act.get('duration', 0)))
                         act_cals = act.get('calories', act.get('Calories', 0))
-                        act_load = act.get('load', act.get('Training Load', 0))
+                        act_load = act.get('load', act.get('Training Load', act.get('score', 0)))
 
                         st.markdown(f"""
                                     <div style="background: {card_bg}; border: {card_border}; border-left: 4px solid #FF5500; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
