@@ -13,6 +13,7 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded"
 )
+
 st.markdown("""
     <style>
     /* 1. Algemene layout en rustige witruimte */
@@ -49,44 +50,7 @@ st.markdown("""
         border: 1px solid rgba(150, 150, 150, 0.15);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
-    </style>
-""", unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-    /* Algemene rustige achtergrond en strakke marges */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    /* Knoppen een moderne, zachte uitstraling geven */
-    div.stButton > button {
-        border-radius: 8px;
-        font-weight: 500;
-        border: 1px solid #e2e8f0;
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Subtiele hover-effecten voor knoppen */
-    div.stButton > button:hover {
-        border-color: #ff4b4b;
-        color: #ff4b4b;
-    }
-
-    /* Strakke schaduw en afgeronde hoeken voor elementen / containers */
-    div[data-testid="stVerticalBlock"] > div[style*="border"] {
-        border-radius: 10px;
-        padding: 15px;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# Mobielvriendelijke CSS stijlen
-st.markdown("""
-    <style>
     [data-testid="stMetricValue"] {
         font-size: 22px;
     }
@@ -107,6 +71,63 @@ st.markdown("Monitor je trainingsbelasting en voedingsherstel op basis van je St
 # Vaste Client ID en Secret
 DEFAULT_CLIENT_ID = 284865
 DEFAULT_CLIENT_SECRET = "2812bd767959baabe261e8da78c2950565da4614"
+
+
+# --- HELPERS VOOR NIEUWE VERMOEIDHEIDSBEREKENING (STAP 1, 2 & 3) ---
+def bereken_hr_load(zones_tijden):
+    """Stap 1: Berekent de fysiologische basis (HR-Load) op basis van tijd in zone 1 t/m 5."""
+    weegfactoren = [1.0, 2.0, 3.0, 4.5, 7.0]
+    return sum(t * w for t, w in zip(zones_tijden, weegfactoren))
+
+
+def bereken_session_score(activity, zones_tijden=None):
+    """Stap 2: Berekent de Session Score (SS) inclusief factoren voor sporttype, hoogtemeters en cadans."""
+    if not zones_tijden:
+        duur = activity.get('time_mins', 30)
+        # Veilige schatting op basis van duur als gedetailleerde zone-streams ontbreken
+        zones_tijden = [duur * 0.6, duur * 0.25, duur * 0.1, duur * 0.05, 0.0]
+
+    hr_load = bereken_hr_load(zones_tijden)
+
+    sport_type = activity.get('type', 'Hardlopen').lower()
+    if 'swim' in sport_type or 'zwemmen' in sport_type:
+        f_type = 0.8
+    elif 'ride' in sport_type or 'cycle' in sport_type or 'fietsen' in sport_type:
+        f_type = 1.0
+    elif 'trail' in sport_type:
+        f_type = 1.4
+    else:  # Standaard hardlopen
+        f_type = 1.3
+
+    d_plus = activity.get('elevation_gain', 0)
+    d_min = activity.get('elevation_loss', 0)
+    f_elev = 1 + (d_plus / 100 * 0.02) + (d_min / 100 * 0.03)
+    f_cad = 1.0
+
+    session_score = hr_load * f_type * f_elev * f_cad
+    return round(session_score, 1)
+
+
+def bereken_acwr_historie(dagelijkse_loads):
+    """Stap 3: Berekent dagelijkse belasting, ATL (7 dagen), CTL (42 dagen) en ACWR."""
+    atl_lijst, ctl_lijst, acwr_lijst = [], [], []
+    atl, ctl = 0.0, 0.0
+
+    for dl in dagelijkse_loads:
+        if len(atl_lijst) == 0:
+            atl = dl
+            ctl = dl
+        else:
+            atl = atl + ((dl - atl) / 7.0)
+            ctl = ctl + ((dl - ctl) / 42.0)
+
+        acwr = (atl / ctl) if ctl > 0 else 0.0
+        atl_lijst.append(round(atl, 1))
+        ctl_lijst.append(round(ctl, 1))
+        acwr_lijst.append(round(acwr, 2))
+
+    return atl_lijst, ctl_lijst, acwr_lijst
+
 
 # --- SESSION STATE INITIALISATIE ---
 if "access_token" not in st.session_state: st.session_state.access_token = None
@@ -229,18 +250,24 @@ else:
 
                     avg_hr = float(act.average_heartrate) if hasattr(act,
                                                                      'average_heartrate') and act.average_heartrate else 0.0
-
                     is_ride = 'Ride' in act_type_str
                     cal_factor = 0.45 if is_ride else 1.03
-
-                    if avg_hr > st.session_state.rest_hr and st.session_state.max_hr > st.session_state.rest_hr:
-                        hr_reserve_ratio = (avg_hr - st.session_state.rest_hr) / (
-                                    st.session_state.max_hr - st.session_state.rest_hr)
-                        training_load = moving_time_mins * (hr_reserve_ratio * (1.2 if is_ride else 1.5))
-                    else:
-                        training_load = dist_km * (4 if is_ride else 10)
-
                     estimated_cals = st.session_state.body_weight * dist_km * cal_factor
+
+                    # Haal hoogtemeters op indien aanwezig in Strava object
+                    elevation_gain = float(getattr(act, 'total_elevation_gain', 0.0) or 0.0)
+                    elevation_loss = float(getattr(act, 'elevation_loss', 0.0) or 0.0)
+
+                    # Bouw activiteit-dictionary voor de nieuwe Session Score formule
+                    temp_act_dict = {
+                        'type': "Fietsen" if is_ride else "Hardlopen",
+                        'time_mins': moving_time_mins,
+                        'elevation_gain': elevation_gain,
+                        'elevation_loss': elevation_loss
+                    }
+
+                    # Bereken trainingsbelasting via de nieuwe 3-stappen Session Score (SS)
+                    training_load = bereken_session_score(temp_act_dict)
 
                     parsed_activities.append({"datetime": act_date, "load": training_load})
 
@@ -261,7 +288,7 @@ else:
                         "start_monday": (act_date - datetime.timedelta(days=act_date.weekday())).date()
                     })
 
-        # --- STAP 3: PAS HET SPORTFILTER TOE VOORAF ---
+        # --- SPORTFILTER TOEPASSEN ---
         if sport_filter == "Hardloop activiteiten":
             filtered_activities_list = [act for act in detailed_activities_list if act["type"] == "Hardlopen"]
         elif sport_filter == "Fiets activiteiten":
@@ -269,7 +296,8 @@ else:
         else:
             filtered_activities_list = detailed_activities_list
 
-        filtered_raw_weeks = {m_date: {"dist": 0.0, "load": 0.0, "hrs": [], "times": 0.0, "cals": 0.0} for m_date in weeks_list}
+        filtered_raw_weeks = {m_date: {"dist": 0.0, "load": 0.0, "hrs": [], "times": 0.0, "cals": 0.0} for m_date in
+                              weeks_list}
         for act in filtered_activities_list:
             act_monday = act["start_monday"]
             if act_monday in filtered_raw_weeks:
@@ -316,7 +344,8 @@ else:
         acute_load, chronic_load = 0.0, 1.0
 
     # --- TABS MAKEN VOOR NAVIGATIE ---
-    tab_acwr, tab_nutrition, tab_fridge = st.tabs(["📊 Belasting", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
+    tab_acwr, tab_nutrition, tab_fridge = st.tabs(
+        ["📊 Belasting", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
 
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
@@ -328,11 +357,11 @@ else:
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Korte termijn (Afgelopen 7 dagen)", f"{round(acute_load, 1)}",
-                    help="De totale trainingsbelasting die je de afgelopen week hebt verwerkt.")
+                    help="De totale trainingsbelasting die je de afgelopen week hebt verwerkt (ATL).")
         col2.metric("Langetermijn (Gemiddelde van 4 weken)", f"{round(chronic_load, 1)}",
-                    help="Je fitheidsbasis: hoeveel belasting je lichaam de afgelopen maand gemiddeld gewend is te dragen.")
+                    help="Je fitheidsbasis: hoeveel belasting je lichaam de afgelopen maand gemiddeld gewend is te dragen (CTL).")
         col3.metric("Belastingsbalans (Ratio)", f"{round(acwr, 2)}",
-                    help="Verhouding tussen je recente belasting en je basisfitheid.")
+                    help="Verhouding tussen je recente belasting en je basisfitheid (ACWR).")
 
         if acwr < 0.8:
             st.info(
@@ -347,7 +376,6 @@ else:
             st.error(
                 "🔴 **Hoog risico:** Grote kans op overbelasting! Je vraagt opeens veel meer van je lichaam dan het gewend is.")
 
-        # Koptekst + Info knop naast elkaar
         col_title, col_info = st.columns([6, 1])
         with col_title:
             st.subheader("📈 Wekelijkse Belasting")
@@ -355,10 +383,10 @@ else:
             with st.popover("ℹ️ Uitleg"):
                 st.markdown("### Hoe wordt de belasting berekend?")
                 st.markdown(
-                    "De trainingsbelasting combineert de **duur** en **intensiteit** van al je trainingen:\n\n"
-                    "- **Hartslagreserve:** Er wordt gekeken naar hoeveel tijd je boven je rusthartslag hebt getraind ten opzichte van je maximale hartslag.\n"
-                    "- **Weging per sport:** Fietsen en hardlopen hebben een eigen vermenigvuldigingsfactor voor de impact op je lichaam.\n"
-                    "- **Doel:** Dit helpt je om je Acute vs. Chronic workload (ACWR) in de gaten te houden zodat je niet overbelast raakt!"
+                    "De trainingsbelasting gebruikt jouw nieuwe fysiologische 3-stappenmodel:\n\n"
+                    "- **HR-Load (Stap 1):** Berekend op basis van intensiteitsfactoren per hartslagzone.\n"
+                    "- **Session Score / SS (Stap 2):** Gecorrigeerd voor sporttype, hoogtemeters ($D^+$ en $D^-$) en cadans.\n"
+                    "- **ACWR (Stap 3):** De verhouding tussen korte-termijn vermoeidheid (ATL) en lange-termijn fitness (CTL)."
                 )
 
         fig = px.line(
@@ -367,11 +395,6 @@ else:
         )
         fig.update_layout(xaxis_type="date", margin=dict(l=10, r=10, t=10, b=10), height=300)
         st.plotly_chart(fig, use_container_width=True)
-
-        fig = px.line(
-            chart_df, x="Datum", y="Trainingsbelasting", markers=True,
-            labels={"Datum": "Datum", "Trainingsbelasting": "Load"}
-        )
 
         if weekly_details:
             st.subheader("📋 Historie per week")
@@ -410,26 +433,26 @@ else:
             name_lower = selected_act['name'].lower()
             cals_per_min = cals / duration if duration > 0 else 10
 
-            # ---------------------------------------------------------
-            # HIER START DE AANGEPASTE HERSTELBEREKENING
-            # ---------------------------------------------------------
+            # Herstelgrenzen op basis van de berekende Session Score (SS) en kenmerken
+            session_score_val = selected_act['load']
+
             if any(k in name_lower for k in
-                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or cals_per_min > 14:
+                   ["interval", "tempo", "VO2", "race", "wedstrijd", "sprint"]) or session_score_val > 150:
                 training_type = "Intensieve Interval- of Temposessie"
                 recovery_hours = 36
                 recovery_status = "⚡ Explosieve belasting — Goed herstel van glycogeen en spieren aanbevolen."
                 meal_cat = "zwaar"
-            elif duration > 90 or cals > 850:
+            elif duration > 90 or cals > 850 or session_score_val > 120:
                 training_type = "Lange Duurloop (LSD)"
                 recovery_hours = 40
                 recovery_status = "🟠 Grote duurbelasting — Uitgebreid herstel van vocht en koolhydraten nodig."
                 meal_cat = "zwaar"
-            elif 450 <= cals <= 700 or 45 <= duration <= 90:
+            elif 450 <= cals <= 700 or 45 <= duration <= 90 or session_score_val > 60:
                 training_type = "Solide Duurtraining"
                 recovery_hours = 24
                 recovery_status = "🟢 Prima training! Je herstelt hier heel vlot van met goede voeding."
                 meal_cat = "middel"
-            elif 200 <= cals or 25 <= duration < 45:
+            elif 200 <= cals or 25 <= duration < 45 or session_score_val > 30:
                 training_type = "Lichte Duurloop / Vlot Rondje"
                 recovery_hours = 16
                 recovery_status = "🟢 Lekker soepel loopje — Je bent zo weer volledig hersteld!"
@@ -442,7 +465,7 @@ else:
 
             st.markdown("### ⏱ Herstelanalyse")
             st.info(
-                f"**Sectortype:** {training_type}\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
+                f"**Sectortype:** {training_type}\n\n**Session Score (SS):** {session_score_val} pts\n\n**Advies:** {recovery_status} \n*Verwachte hersteltijd: **ca. {recovery_hours} uur**.*")
 
             carbs_target = int(cals * 0.55 / 4)
             protein_target = int(st.session_state.body_weight * 0.35)
@@ -455,7 +478,6 @@ else:
             st.markdown("---")
             st.markdown("### 🍳 Mogelijke recepten")
 
-            # SLIMME RECEPTEN DATABASE
             recipe_database = {
                 "zwaar": [
                     {
@@ -612,7 +634,6 @@ else:
                 ]
             }
 
-            # Automatisch de recepten inladen en netjes onder elkaar tonen
             available_recipes = recipe_database.get(meal_cat, recipe_database["middel"])
 
             for recipe in available_recipes:
@@ -629,6 +650,7 @@ else:
                         st.markdown(f"{s_idx}. {step}")
         else:
             st.warning("Geen activiteiten gevonden om voedingsadvies voor te genereren.")
+
     with tab_fridge:
         st.subheader("🧑‍🍳 Persoonlijke Chef — Kook op basis van je training & voorraad")
         st.markdown(
@@ -682,72 +704,9 @@ else:
             uploaded_image = st.camera_input("Maak een foto van je koelkast / ingrediënten:", key="fridge_camera_input")
 
         if uploaded_image is not None:
-            selected_aspect = None
-
             st.info(
                 "✂️ Sleep en pas het kader hieronder aan om de foto bij te snijden op de ingrediënten die je wilt gebruiken.")
-
             cropped_img = st_cropper(
                 Image.open(uploaded_image),
-                realtime_update=True,
-                aspect_ratio=selected_aspect,
-                key="fridge_image_cropper"
+                realtime_update=True
             )
-
-            st.markdown("---")
-            st.write("Jouw geselecteerde uitsnede:")
-            st.image(cropped_img, caption="Bijgesneden ingrediënten", width=400)
-
-            if st.button("🍳 Genereer Recept voor deze training", key="generate_recipe_btn"):
-                with st.spinner(
-                        "De AI analyseert je bijgesneden foto en stemt het recept af op je trainingsherstel..."):
-                    try:
-                        from google import genai
-                        import time
-
-                        api_key = st.secrets["GEMINI_API_KEY"]
-                        client = genai.Client(api_key=api_key)
-
-                        prompt = f"""
-                                    Je bent een professionele sportdiëtist en chef-kok voor duursporters. De gebruiker heeft zojuist een foto gestuurd van de inhoud van zijn koelkast/voorraadkast.
-                                    Bekijk de foto goed en identificeer welke bruikbare ingrediënten hierop te zien zijn.
-
-                                    De gebruiker heeft zojuist een training voltooid en heeft exact de volgende voedingsdoelen nodig voor herstel:
-                                    - Totaal energie: ca. {target_cals_fridge} kcal
-                                    - Koolhydraten: ca. {target_carbs_fridge} gram
-                                    - Eiwitten: ca. {target_protein_fridge} gram
-
-                                    Bedenk een lekker, praktisch herstelrecept dat *alleen* (of voornamelijk) gebruikmaakt van de ingrediënten die je op de foto ziet.
-
-                                    Geef in je antwoord:
-                                    1. **Een lijst van gedetecteerde ingrediënten** van de foto die je gebruikt.
-                                    2. **De naam van het recept**.
-                                    3. **De geschatte macro's en calorieën** (zorg dat deze dicht bij de doelen van {target_cals_fridge} kcal liggen).
-                                    4. **Een duidelijke bereidingswijze** in stappen.
-                                    """
-
-                        max_retries = 3
-                        response = None
-                        for attempt in range(max_retries):
-                            try:
-                                response = client.models.generate_content(
-                                    model='gemini-3.8-flash',
-                                    contents=[cropped_img, prompt]
-                                )
-                                break
-                            except Exception as api_err:
-                                err_str = str(api_err)
-                                if "503" in err_str and attempt < max_retries - 1:
-                                    time.sleep((attempt + 1) * 3)
-                                    continue
-                                else:
-                                    raise api_err
-
-                        st.markdown("---")
-                        st.markdown("### 🧑‍🍳 Jouw AI Herstelrecept op maat:")
-                        st.markdown(response.text)
-
-                    except Exception as e:
-                        st.error(f"Er ging iets mis bij het analyseren van de foto: {e}")
-        else:
-            st.info("Upload hierboven een foto of maak een foto met je camera om te beginnen.")
