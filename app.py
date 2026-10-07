@@ -383,8 +383,8 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # --- VASTE DONKERE SPORT-WIDGETS (ALTIJD GOED CONTRAST) ---
-        card_bg = "#0f172a"  # Strakke diepe donkere kleur à la Garmin/Strava
+        # --- VASTE DONKERE SPORT-WIDGETS ---
+        card_bg = "#0f172a"
         card_border = "1px solid rgba(255, 255, 255, 0.1)"
         text_main = "#ffffff"
         text_sub = "#94a3b8"
@@ -471,11 +471,16 @@ else:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED ---
+        # --- RECENTE ACTIVITEITEN FEED (CHRONOLOGISCH GESORTEERD) ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            sorted_activities = sorted(filtered_activities_list, key=lambda x: x.get('Datum', ''), reverse=True)
+            # Converteer naar echte datetime-objecten zodat sorteren op datum feilloos werkt
+            sorted_activities = sorted(
+                filtered_activities_list,
+                key=lambda x: pd.to_datetime(x.get('Datum', ''), errors='coerce'),
+                reverse=True
+            )
 
             for act in sorted_activities[:3]:
                 act_date = act.get('Datum', '')
@@ -501,7 +506,6 @@ else:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
                 df_details = pd.DataFrame(weekly_details)
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
-
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
         st.markdown(
