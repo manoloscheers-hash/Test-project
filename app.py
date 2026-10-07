@@ -383,37 +383,37 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-        # --- RESPONSIEVE KAARTEN (WERKT PERFECT OP LAPTOP EN TELEFOON IN DARK/LIGHT MODE) ---
-        card_bg = "rgba(255, 255, 255, 0.04)"
-        card_border = "1px solid rgba(255, 255, 255, 0.08)"
-        text_main = "#f8fafc"
+        # --- VASTE DONKERE SPORT-WIDGETS (ALTIJD GOED CONTRAST) ---
+        card_bg = "#0f172a"  # Strakke diepe donkere kleur à la Garmin/Strava
+        card_border = "1px solid rgba(255, 255, 255, 0.1)"
+        text_main = "#ffffff"
         text_sub = "#94a3b8"
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
             st.markdown(f"""
-                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
-                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">🔥 Acute Load</div>
-                    <div style="font-size: 24px; font-weight: 800; color: {text_main}; margin: 4px 0;">{round(acute_load, 1)}</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🔥 Acute Load</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{round(acute_load, 1)}</div>
                     <div style="font-size: 11px; color: {text_sub};">Afgelopen 7 dagen</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"""
-                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
-                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">🛡️ Chronic Load</div>
-                    <div style="font-size: 24px; font-weight: 800; color: {text_main}; margin: 4px 0;">{round(chronic_load, 1)}</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">🛡️ Chronic Load</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {text_main}; margin: 6px 0;">{round(chronic_load, 1)}</div>
                     <div style="font-size: 11px; color: {text_sub};">Fitheidsbasis (42d)</div>
                 </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown(f"""
-                <div style="background: {card_bg}; border: {card_border}; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 8px;">
-                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase;">⚖️ ACWR Ratio</div>
-                    <div style="font-size: 24px; font-weight: 800; color: {status_color}; margin: 4px 0;">{round(acwr, 2)}</div>
+                <div style="background: {card_bg}; border: {card_border}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+                    <div style="font-size: 11px; color: {text_sub}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">⚖️ ACWR Ratio</div>
+                    <div style="font-size: 26px; font-weight: 800; color: {status_color}; margin: 6px 0;">{round(acwr, 2)}</div>
                     <div style="font-size: 11px; color: {text_sub};">Doel: 0.8 - 1.3</div>
                 </div>
             """, unsafe_allow_html=True)
@@ -471,11 +471,10 @@ else:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- RECENTE ACTIVITEITEN FEED (GEFILTERD OP ECHTE RECENTE TRAININGEN) ---
+        # --- RECENTE ACTIVITEITEN FEED ---
         if filtered_activities_list:
             st.subheader("⚡ Recente Activiteiten")
 
-            # Sorteer op datum aflopend (nieuwste eerst) en pak de top 3
             sorted_activities = sorted(filtered_activities_list, key=lambda x: x.get('Datum', ''), reverse=True)
 
             for act in sorted_activities[:3]:
