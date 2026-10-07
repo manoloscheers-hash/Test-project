@@ -431,9 +431,8 @@ else:
         acute_load, chronic_load = 0.0, 1.0
 
     # --- TABS MAKEN VOOR NAVIGATIE ---
-    tab_acwr, tab_nutrition, tab_fridge = st.tabs(
-        ["📊 Belasting", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
-
+    tab_acwr, tab_schema, tab_nutrition, tab_fridge = st.tabs(
+        ["📊 Belasting", "📅 Trainingsschema", "🍎 Voeding & Herstel", "🧑‍🍳 Persoonlijke Chef (work in progress)"])
     with tab_acwr:
         acwr = acute_load / chronic_load if chronic_load > 0 else 0
 
@@ -510,6 +509,51 @@ else:
         # --- AANROEP ACTIONABLE COACHING & DOELMODULE ---
         render_actionable_coaching_module(acwr, acute_load, chronic_load, card_bg, card_border, text_main, text_sub,
                                           user_goal)
+
+
+        def render_training_schedule_module(user_goal):
+            """
+            Toont een basis weekprogramma op basis van het geselecteerde doel.
+            """
+            st.subheader(f"📅 Voorbeeld Trainingsschema: {user_goal}")
+            st.markdown(
+                "Heb je nog geen vast schema? Gebruik deze richtlijn als weekstructuur op basis van je gekozen doel:")
+
+            if "5 km" in user_goal:
+                st.markdown("""
+                * **Dinsdag (Interval):** 6x 400m op 5k-tempo (met 90 sec wandel/drafpauze)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 15 min op drempeltempo (vlot maar gecontroleerd), 10 min uitlopen
+                * **Zaterdag (Herstelloop):** 30 min heel rustig (Zone 1/2)
+                * **Zondag (Duurloop):** 45-60 min ontspannen duurloop
+                """)
+            elif "10 km" in user_goal:
+                st.markdown("""
+                * **Dinsdag (Interval):** 5x 1000m op 10k-tempo (2 min wandel/drafpauze)
+                * **Donderdag (Tempoloop):** 15 min inlopen, 20 min vlot duurtempo, 10 min uitlopen
+                * **Zaterdag (Herstelloop):** 35 min rustig
+                * **Zondag (Lange Duurloop):** 60-75 min gestaag duurtempo
+                """)
+            elif "Halve Marathon" in user_goal:
+                st.markdown("""
+                * **Dinsdag (Interval/Blokken):** 3x 2000m op Halve Marathon tempo (3 min pauze)
+                * **Donderdag (Tempoloop):** 30 min vlot op race-tempo
+                * **Zaterdag (Herstelloop):** 40 min rustige duurloop
+                * **Zondag (Lange Duurloop):** 12 tot 16 km rustig opbouwend
+                """)
+            elif "Marathon" in user_goal:
+                st.markdown("""
+                * **Dinsdag (Interval/Drempel):** 4x 3000m op Marathon/Halve Marathon tempo (1 km herstel)
+                * **Woensdag (Herstelloop):** 45-50 min rustig
+                * **Donderdag (Marathon Tempo):** 10-14 km op beoogd marathontempo
+                * **Zaterdag (Herstelloop):** 40 min heel rustig
+                * **Zondag (Lange Duurloop):** 22 tot 30 km (stabiel Zone 2 / rustig)
+                """)
+            else:
+                st.markdown("""
+                * **Dinsdag:** 30-40 min vlot / wisselduurloop op gevoel
+                * **Donderdag:** 30-45 min rustige duurloop
+                * **Zondag:** 50-60 min ontspannen lange duurloop
+                """)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -615,6 +659,9 @@ else:
             with st.expander("📋 Bekijk volledige historische tabel per week"):
                 df_details = pd.DataFrame(weekly_details)
                 st.dataframe(df_details.iloc[::-1], use_container_width=True, hide_index=True)
+
+    with tab_schema:
+        render_training_schedule_module(user_goal)
 
     with tab_nutrition:
         st.subheader("🍎 Voeding- & Hersteladvies")
